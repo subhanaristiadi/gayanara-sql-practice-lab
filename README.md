@@ -28,8 +28,7 @@ The project has three distinct parts that must not be confused:
 
 The frontend being public **does not** mean the backend or the database is hosted online. Cloud deployment of those two is a future phase, not part of the current release.
 
-### Full Dataset can be accessed/downloaded on:
-https://ngulikdata.com/datasets/gayanara
+### Full Dataset can be accessed/downloaded on: https://ngulikdata.com/datasets/gayanara
 
 ### How query submission and validation work
 
