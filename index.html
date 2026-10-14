@@ -1,0 +1,1955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gayanara SQL Practice Lab</title>
+<style>
+:root {
+  --sidebar-bg: #1a2332;
+  --sidebar-text: #c8d6e5;
+  --sidebar-active: #2d3f52;
+  --sidebar-hover: #243040;
+  --main-bg: #f5f7fa;
+  --card-bg: #ffffff;
+  --accent: #2d8cf0;
+  --accent-dark: #1a5fb4;
+  --accent-light: #e8f1fd;
+  --teal: #14b8a6;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --border: #e2e8f0;
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger: #dc2626;
+  --radius: 8px;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "SF Mono", "Fira Code", "JetBrains Mono", Consolas, monospace;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); background: var(--main-bg); color: var(--text-primary); line-height: 1.6; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Layout */
+.app { display: grid; grid-template-columns: 280px 1fr; min-height: 100vh; }
+.sidebar { background: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; width: 280px; overflow-y: auto; z-index: 100; }
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: #3a4f65; border-radius: 2px; }
+.main { grid-column: 2; padding: 24px; max-width: 1400px; width: 100%; }
+
+/* Sidebar */
+.sidebar-brand { padding: 20px 16px; border-bottom: 1px solid #2a3a4e; }
+.sidebar-brand h1 { font-size: 16px; font-weight: 700; color: #fff; letter-spacing: -0.3px; }
+.sidebar-brand span { font-size: 12px; color: var(--text-muted); display: block; margin-top: 2px; }
+.sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+.nav-section { margin-bottom: 4px; }
+.nav-section-title { padding: 8px 16px 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
+
+/* Parent exercise in sidebar */
+.nav-parent { display: flex; align-items: center; justify-content: space-between; padding: 7px 16px; font-size: 13px; color: var(--sidebar-text); cursor: pointer; transition: background 0.15s; border: none; background: none; width: 100%; text-align: left; }
+.nav-parent:hover { background: var(--sidebar-hover); }
+.nav-parent.active { background: var(--sidebar-active); color: #fff; }
+.nav-parent .parent-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nav-parent .parent-progress { font-size: 10px; color: var(--text-muted); margin-left: 6px; min-width: 28px; text-align: right; }
+.nav-parent .parent-progress.full { color: var(--success); }
+.nav-parent .expand-arrow { font-size: 10px; margin-left: 4px; transition: transform 0.15s; }
+.nav-parent.expanded .expand-arrow { transform: rotate(90deg); }
+
+/* Sub-exercise in sidebar */
+.nav-sub { display: block; padding: 5px 16px 5px 32px; font-size: 12px; color: var(--sidebar-text); cursor: pointer; transition: background 0.15s; border: none; background: none; width: 100%; text-align: left; }
+.nav-sub:hover { background: var(--sidebar-hover); }
+.nav-sub.active { background: var(--sidebar-active); color: #fff; }
+.nav-sub .indicator { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; vertical-align: middle; background: #3a4f65; }
+.nav-sub .indicator.completed { background: var(--success); }
+.nav-sub .indicator.saved { background: var(--warning); }
+
+.nav-item { display: block; padding: 7px 16px; font-size: 13px; color: var(--sidebar-text); cursor: pointer; transition: background 0.15s; border: none; background: none; width: 100%; text-align: left; }
+.nav-item:hover { background: var(--sidebar-hover); text-decoration: none; }
+.nav-item.active { background: var(--sidebar-active); color: #fff; }
+.nav-item .indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; vertical-align: middle; background: #3a4f65; }
+.nav-item .indicator.completed { background: var(--success); }
+
+.sidebar-footer { padding: 16px; border-top: 1px solid #2a3a4e; }
+.progress-bar-container { background: #2a3a4e; border-radius: 4px; height: 6px; overflow: hidden; margin-bottom: 8px; }
+.progress-bar { height: 100%; background: var(--teal); border-radius: 4px; transition: width 0.3s; }
+.progress-text { font-size: 11px; color: var(--text-muted); }
+
+/* Main content */
+.page-header { margin-bottom: 24px; }
+.page-header h2 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.page-header .subtitle { font-size: 14px; color: var(--text-secondary); }
+.breadcrumb { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
+.breadcrumb a { cursor: pointer; }
+
+/* Dashboard */
+.dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: var(--card-bg); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
+.stat-card .label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+.stat-card .value { font-size: 28px; font-weight: 700; }
+.stat-card .sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+.category-progress { background: var(--card-bg); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); margin-bottom: 16px; }
+.category-progress h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+.cat-progress-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 13px; }
+.cat-progress-row .cat-name { flex: 1; }
+.cat-progress-row .cat-bar { flex: 2; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.cat-progress-row .cat-fill { height: 100%; background: var(--accent); border-radius: 4px; }
+.cat-progress-row .cat-pct { width: 50px; text-align: right; color: var(--text-secondary); font-size: 12px; }
+
+/* Filters */
+.filters-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+.filters-bar input[type="search"] { flex: 1; min-width: 200px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
+.filters-bar input[type="search"]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-light); }
+.filters-bar select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; background: var(--card-bg); }
+.filters-bar select:focus { outline: none; border-color: var(--accent); }
+
+/* Exercise / Sub-exercise card */
+.exercise-container { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.exercise-header { padding: 20px 24px; border-bottom: 1px solid var(--border); }
+.exercise-header .meta { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+.exercise-header h3 { font-size: 18px; font-weight: 600; }
+.badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.badge-beginner { background: #dcfce7; color: #166534; }
+.badge-intermediate { background: #fef3c7; color:#92400e; }
+.badge-advanced { background: #fecaca; color: #991b1b; }
+.badge-category { background: var(--accent-light); color: var(--accent-dark); }
+.badge-status { background: #f1f5f9; color: var(--text-secondary); }
+.badge-status.completed { background: #dcfce7; color: #166534; }
+.badge-status.saved { background: #fef3c7; color: #92400e; }
+
+.exercise-body { padding: 24px; }
+.section-title { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; color: var(--text-secondary); margin-bottom: 10px; }
+.business-context { font-size: 14px; color: var(--text-secondary); margin-bottom: 16px; }
+.question-box { background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
+.question-box .question-text { font-size: 15px; font-weight: 500; margin-bottom: 8px; }
+.requirements-list { list-style: none; padding: 0; }
+.requirements-list li { font-size: 13px; padding: 4px 0 4px 20px; position: relative; }
+.requirements-list li::before { content: "•"; position: absolute; left: 8px; color: var(--accent); font-weight: bold; }
+.metric-defs { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; padding: 12px; background: #f0f9ff; border-radius: 6px; border: 1px solid #bae6fd; }
+.metric-defs strong { color: var(--text-primary); }
+
+/* Expected output table */
+.expected-output { margin-bottom: 20px; }
+.expected-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.expected-table th { background: #f1f5f9; padding: 8px 12px; text-align: left; font-weight: 600; border: 1px solid var(--border); }
+.expected-table td { padding: 8px 12px; border: 1px solid var(--border); color: var(--text-secondary); font-style: italic; }
+.expected-table .placeholder { color: var(--text-muted); font-style: italic; }
+.expected-table-meta { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+
+/* SQL Editor */
+.sql-editor { margin-bottom: 20px; }
+.sql-editor label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.sql-editor textarea { width: 100%; min-height: 220px; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius); font-family: var(--font-mono); font-size: 13px; line-height: 1.5; resize: vertical; background: #fafbfc; }
+.sql-editor textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-light); }
+.sql-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+
+/* Buttons */
+.btn { padding: 8px 14px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; background: var(--card-bg); color: var(--text-primary); }
+.btn:hover { background: #f1f5f9; }
+.btn:focus { outline: none; box-shadow: 0 0 0 2px var(--accent-light); }
+.btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn-primary:hover { background: var(--accent-dark); }
+.btn-danger { background: #fff; color: var(--danger); border-color: #fecaca; }
+.btn-danger:hover { background: #fef2f2; }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+
+/* Completion control */
+.completion-control { display: flex; align-items: center; gap: 8px; margin-top: 12px; padding: 12px; background: #f8fafc; border-radius: var(--radius); border: 1px solid var(--border); }
+.completion-control input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--success); cursor: pointer; }
+.completion-control label { font-size: 13px; cursor: pointer; }
+.save-status { font-size: 12px; color: var(--text-muted); margin-left: auto; }
+.save-status.saved { color: var(--success); }
+.save-status.unsaved { color: var(--warning); }
+
+/* Validation status banner */
+.validation-banner { margin-top: 14px; padding: 12px 14px; border-radius: var(--radius); font-size: 13px; border: 1px solid var(--border); background: #f8fafc; display: none; }
+.validation-banner.visible { display: block; }
+.validation-banner .vb-head { font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+.validation-banner .vb-icon { font-size: 15px; }
+.validation-banner .vb-detail { color: var(--text-secondary); white-space: pre-wrap; line-height: 1.5; }
+.validation-banner.correct { background: #f0fdf4; border-color: #bbf7d0; }
+.validation-banner.correct .vb-head { color: #166534; }
+.validation-banner.incorrect { background: #fef2f2; border-color: #fecaca; }
+.validation-banner.incorrect .vb-head { color: #991b1b; }
+.validation-banner.error { background: #fffbeb; border-color: #fde68a; }
+.validation-banner.error .vb-head { color: #92400e; }
+.validation-banner.unavailable { background: #f1f5f9; border-color: var(--border); }
+.validation-banner.unavailable .vb-head { color: var(--text-secondary); }
+.validation-banner.running .vb-spin { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--accent); border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
+.validation-banner.running .vb-head { color: var(--accent-dark); }
+@keyframes spin { to { transform: rotate(360deg); } }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* Source SQL */
+.source-sql { margin-top: 20px; border: 1px solid var(--border); border-radius: var(--radius); }
+.source-sql-toggle { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; cursor: pointer; background: #f8fafc; border-radius: var(--radius); font-size: 13px; font-weight: 500; }
+.source-sql-toggle:hover { background: #f1f5f9; }
+.source-sql-content { padding: 16px; background: #1e293b; color: #e2e8f0; font-family: var(--font-mono); font-size: 12px; line-height: 1.5; overflow-x: auto; white-space: pre-wrap; display: none; border-radius: 0 0 var(--radius) var(--radius); }
+.source-sql-content.visible { display: block; }
+.source-sql-toggle .arrow { transition: transform 0.2s; }
+.source-sql-toggle.open .arrow { transform: rotate(90deg); }
+.source-sql.schema .source-sql-content { background: #16202e; }
+
+/* Navigation */
+.exercise-nav { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-top: 1px solid var(--border); background: #fafbfc; }
+.exercise-nav .nav-info { font-size: 13px; color: var(--text-secondary); }
+
+/* Parent overview sub-list */
+.sub-list { margin-top: 16px; }
+.sub-list-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; cursor: pointer; transition: background 0.15s; }
+.sub-list-item:hover { background: #f8fafc; }
+.sub-list-item .sub-num { font-size: 11px; font-weight: 700; color: var(--text-muted); min-width: 24px; }
+.sub-list-item .sub-title { flex: 1; font-size: 13px; }
+.sub-list-item .sub-status { font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+.sub-list-item .sub-status.completed { background: #dcfce7; color: #166534; }
+.sub-list-item .sub-status.saved { background: #fef3c7; color: #92400e; }
+.sub-list-item .sub-status.pending { background: #f1f5f9; color: var(--text-muted); }
+
+/* Notes */
+.notes-section { margin-top: 16px; }
+.notes-section textarea { width: 100%; min-height: 60px; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; resize: vertical; }
+.notes-section textarea:focus { outline: none; border-color: var(--accent); }
+
+/* Toolbar */
+.toolbar { display: flex; gap: 8px; margin-bottom: 16px; justify-content: flex-end; flex-wrap: wrap; }
+.toolbar .btn { font-size: 12px; padding: 6px 12px; }
+
+/* Toast */
+.toast { position: fixed; bottom: 20px; right: 20px; padding: 12px 20px; background: var(--text-primary); color: #fff; border-radius: var(--radius); font-size: 13px; z-index: 9999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+.toast.visible { opacity: 1; }
+.toast.success { background: var(--success); }
+.toast.error { background: var(--danger); }
+
+/* Empty state */
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+.empty-state h3 { font-size: 16px; margin-bottom: 8px; color: var(--text-secondary); }
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .app { grid-template-columns: 240px 1fr; }
+  .sidebar { width: 240px; }
+  .main { padding: 16px; }
+}
+@media (max-width: 768px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar { position: relative; width: 100%; height: auto; bottom: 0; }
+  .sidebar-nav { max-height: 300px; }
+  .main { grid-column: 1; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <h1>Gayanara SQL Practice Lab</h1>
+      <span>Personal SQL Learning Tool</span>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav" aria-label="Exercise navigation"></nav>
+    <div class="sidebar-footer">
+      <div class="progress-bar-container" aria-label="Overall progress">
+        <div class="progress-bar" id="overallProgress" style="width:0%"></div>
+      </div>
+      <div class="progress-text" id="overallProgressText">0 / 0 sub-exercises completed</div>
+    </div>
+  </aside>
+  <main class="main" id="mainContent"></main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+"use strict";
+/* ============================================================
+   PARENT EXERCISE DEFINITIONS
+   Each parent has a "subs" array. Each sub has exactly one
+   expected output table.
+   ============================================================ */
+const PARENTS = [
+  {
+    id: "ex-01",
+    category: "Data Quality and Validation",
+    title: "Data Quality Profile",
+    difficulty: "Beginner",
+    concepts: ["COUNT","FILTER (WHERE)","UNION ALL","GROUP BY","HAVING","TRIM","LOWER"],
+    businessContext: "Before any analytical work on the Gayanara dataset, you need to understand the shape of the data: row counts, missing values, duplicate emails, and category distributions. This is the first step in any data cleaning workflow.",
+    sourceFile: "01_data_quality_profile.sql",
+    sourceSQL: "-- Business question: What missing values, duplicates, and unexpected distributions should be checked before analysis?\n-- Grain: one row per source-table record; each table is profiled independently.\n-- Relevant tables: customers, products, orders, order_items, reviews.\n\nSELECT 'customers' AS table_name, COUNT(*) AS row_count,\n       COUNT(*) FILTER (WHERE customer_id IS NULL) AS null_customer_id,\n       COUNT(*) FILTER (WHERE email IS NULL) AS null_email,\n       COUNT(*) FILTER (WHERE phone IS NULL) AS null_phone\nFROM customers\nUNION ALL\nSELECT 'products', COUNT(*),\n       COUNT(*) FILTER (WHERE product_id IS NULL),\n       COUNT(*) FILTER (WHERE name IS NULL),\n       COUNT(*) FILTER (WHERE material IS NULL)\nFROM products\nUNION ALL\nSELECT 'orders', COUNT(*),\n       COUNT(*) FILTER (WHERE order_id IS NULL),\n       COUNT(*) FILTER (WHERE customer_id IS NULL),\n       COUNT(*) FILTER (WHERE promo_code IS NULL)\nFROM orders\nUNION ALL\nSELECT 'order_items', COUNT(*),\n       COUNT(*) FILTER (WHERE item_id IS NULL),\n       COUNT(*) FILTER (WHERE order_id IS NULL),\n       COUNT(*) FILTER (WHERE product_id IS NULL)\nFROM order_items\nUNION ALL\nSELECT 'reviews', COUNT(*),\n       COUNT(*) FILTER (WHERE review_id IS NULL),\n       COUNT(*) FILTER (WHERE order_id IS NULL),\n       COUNT(*) FILTER (WHERE review_text IS NULL)\nFROM reviews;\n\n-- Duplicate customer emails, including all duplicate groups.\nSELECT LOWER(TRIM(email)) AS email_normalized,\n       COUNT(*) AS customer_count\nFROM customers\nWHERE email IS NOT NULL\nGROUP BY LOWER(TRIM(email))\nHAVING COUNT(*) > 1\nORDER BY customer_count DESC, email_normalized;\n\n-- Raw product-category distribution for cleaning review.\nSELECT category, COUNT(*) AS product_count\nFROM products\nGROUP BY category\nORDER BY product_count DESC, category;",
+    subs: [
+      {
+        id: "ex-01-s1", title: "Null Count Profile Across All Tables",
+        question: "Profile all five source tables to report row counts and key null-value counts in a single result set using UNION ALL.",
+        requirements: ["Report row_count and null counts for key columns in each of the 5 tables","Use UNION ALL to combine the 5 profile rows into one result set","Select meaningful key columns per table (e.g. customer_id, email, phone for customers; product_id, name, material for products)"],
+        expectedOutput: { columns: ["table_name","row_count","null_customer_id","null_email","null_phone"], columnNotes: ["Table identifier (first SELECT defines names)","Total rows","Null count col 1","Null count col 2","Null count col 3"], grain: "One row per source table (5 rows total)", sortOrder: "UNION ALL order: customers, products, orders, order_items, reviews" },
+        metricDefs: "Null count = COUNT(*) FILTER (WHERE column IS NULL). Each UNION ALL member profiles one table independently."
+      },
+      {
+        id: "ex-01-s2", title: "Duplicate Customer Emails",
+        question: "Identify all groups of duplicate customer emails, normalized with LOWER and TRIM.",
+        requirements: ["Group by LOWER(TRIM(email))","Filter with HAVING COUNT(*) > 1","Order by customer_count DESC, then email_normalized","Exclude NULL emails from the grouping"],
+        expectedOutput: { columns: ["email_normalized","customer_count"], columnNotes: ["Email lowercased and trimmed","Number of customers sharing that email"], grain: "One row per duplicated email address", sortOrder: "customer_count DESC, email_normalized ASC" },
+        metricDefs: "Duplicate email = same LOWER(TRIM(email)) appearing more than once. NULL emails are excluded."
+      },
+      {
+        id: "ex-01-s3", title: "Raw Product Category Distribution",
+        question: "Show the raw product category distribution for cleaning review, without normalizing values.",
+        requirements: ["GROUP BY the raw category column (no CASE or TRIM)","Count products per category","Order by product_count DESC, then category"],
+        expectedOutput: { columns: ["category","product_count"], columnNotes: ["Original category value (may be inconsistent, e.g. 'Dress' vs 'dress')","Number of products in that category"], grain: "One row per distinct raw category value", sortOrder: "product_count DESC, category ASC" },
+        metricDefs: "This shows the raw distribution before any normalization. Inconsistent values (different casing, Indonesian/English names) are expected."
+      }
+    ]
+  },
+  {
+    id: "ex-02",
+    category: "Data Quality and Validation",
+    title: "Integrity and Arithmetic Validation",
+    difficulty: "Intermediate",
+    concepts: ["LEFT JOIN","COUNT","CTE (WITH)","FILTER (WHERE)","COALESCE","NULLIF","ROUND"],
+    businessContext: "After profiling nulls and duplicates, verify that relationships between tables are intact (no orphan records) and that arithmetic within order_items and orders is consistent. These checks confirm the data is trustworthy enough for downstream analysis.",
+    sourceFile: "02_integrity_and_arithmetic_validation.sql",
+    sourceSQL: "-- Business question: Are relationships and order/item arithmetic internally consistent?\n-- Grain: FK checks are relationship-level; arithmetic check is one row per order.\n-- Relevant tables: customers, products, orders, order_items, reviews.\n\n-- Foreign-key integrity checks.\nSELECT COUNT(*) AS orphan_orders\nFROM orders o\nLEFT JOIN customers c ON c.customer_id = o.customer_id\nWHERE c.customer_id IS NULL;\n\nSELECT COUNT(*) AS orphan_order_items\nFROM order_items oi\nLEFT JOIN orders o ON o.order_id = oi.order_id\nWHERE o.order_id IS NULL;\n\nSELECT COUNT(*) AS orphan_products\nFROM order_items oi\nLEFT JOIN products p ON p.product_id = oi.product_id\nWHERE p.product_id IS NULL;\n\nSELECT COUNT(*) AS orphan_reviews\nFROM reviews r\nLEFT JOIN orders o ON o.order_id = r.order_id\nWHERE o.order_id IS NULL;\n\nSELECT COUNT(*) AS orphan_review_products\nFROM reviews r\nLEFT JOIN products p ON p.product_id = r.product_id\nWHERE p.product_id IS NULL;\n\nSELECT COUNT(*) AS orphan_review_customers\nFROM reviews r\nLEFT JOIN customers c ON c.customer_id = r.customer_id\nWHERE c.customer_id IS NULL;\n\n-- Validate quantity × unit price = line subtotal.\nSELECT COUNT(*) AS item_arithmetic_mismatches\nFROM order_items\nWHERE subtotal_idr <> quantity * unit_price_idr;\n\n-- Validate order amount = item subtotal - discount.\nWITH item_totals AS (\n    SELECT order_id, SUM(subtotal_idr) AS item_subtotal_idr\n    FROM order_items\n    GROUP BY order_id\n)\nSELECT\n    COUNT(*) AS orders_checked,\n    COUNT(*) FILTER (\n        WHERE o.total_amount_idr <> it.item_subtotal_idr - COALESCE(o.discount_amount_idr, 0)\n    ) AS order_amount_mismatches,\n    ROUND(\n        100.0 * COUNT(*) FILTER (\n            WHERE o.total_amount_idr <> it.item_subtotal_idr - COALESCE(o.discount_amount_idr, 0)\n        ) / NULLIF(COUNT(*), 0), 2\n    ) AS mismatch_rate_pct\nFROM orders o\nJOIN item_totals it ON it.order_id = o.order_id;\n\n-- Review consistency: documentation says reviews cover delivered orders.\nSELECT COUNT(*) AS reviews_not_on_delivered_orders\nFROM reviews r\nJOIN orders o ON o.order_id = r.order_id\nWHERE o.order_status <> 'delivered';",
+    subs: [
+      {
+        id: "ex-02-s1", title: "Foreign-Key Orphan Record Checks",
+        question: "Count orphan records across all 6 foreign-key relationships: orders→customers, order_items→orders, order_items→products, reviews→orders, reviews→products, reviews→customers.",
+        requirements: ["Use LEFT JOIN from child to parent and count where parent key IS NULL","Run 6 separate checks (one per FK relationship)","Each returns a single count"],
+        expectedOutput: { columns: ["orphan_orders","orphan_order_items","orphan_products","orphan_reviews","orphan_review_products","orphan_review_customers"], columnNotes: ["Orders with no matching customer","Items with no matching order","Items with no matching product","Reviews with no matching order","Reviews with no matching product","Reviews with no matching customer"], grain: "Six individual queries, each returning one count", sortOrder: "Each is standalone" },
+        metricDefs: "Orphan = child record whose FK does not match any parent row. A count of 0 means full referential integrity."
+      },
+      {
+        id: "ex-02-s2", title: "Item-Level Arithmetic Validation",
+        question: "Count order_items where subtotal_idr does not equal quantity × unit_price_idr.",
+        requirements: ["Simple WHERE clause on order_items","Compare subtotal_idr with quantity * unit_price_idr","Return a single count"],
+        expectedOutput: { columns: ["item_arithmetic_mismatches"], columnNotes: ["Count of order_items where subtotal_idr ≠ quantity × unit_price_idr"], grain: "Single aggregate count", sortOrder: "N/A" },
+        metricDefs: "Each order_item row should satisfy: subtotal_idr = quantity × unit_price_idr. Any violation indicates a data quality issue."
+      },
+      {
+        id: "ex-02-s3", title: "Order Amount Consistency Check",
+        question: "Verify that orders.total_amount_idr equals the sum of its item subtotals minus discount, using a CTE to aggregate items first.",
+        requirements: ["Create a CTE summing subtotal_idr per order_id from order_items","Join to orders and compare total_amount_idr with (item_sum - COALESCE(discount_amount_idr, 0))","Report orders_checked, order_amount_mismatches, and mismatch_rate_pct (rounded to 2 dp)"],
+        expectedOutput: { columns: ["orders_checked","order_amount_mismatches","mismatch_rate_pct"], columnNotes: ["Total orders compared","Orders where total ≠ item sum - discount","Percentage mismatch (2 dp)"], grain: "Single aggregate row", sortOrder: "N/A" },
+        metricDefs: "Order amount check: total_amount_idr should equal SUM(order_items.subtotal_idr) - COALESCE(discount_amount_idr, 0). Mismatch rate = mismatches / total × 100."
+      },
+      {
+        id: "ex-02-s4", title: "Review-Delivered Order Consistency",
+        question: "Count reviews whose associated order is not in 'delivered' status, as the documentation states reviews cover delivered orders.",
+        requirements: ["JOIN reviews to orders on order_id","Filter WHERE order_status <> 'delivered'","Return a single count"],
+        expectedOutput: { columns: ["reviews_not_on_delivered_orders"], columnNotes: ["Count of reviews whose order status is not 'delivered'"], grain: "Single aggregate count", sortOrder: "N/A" },
+        metricDefs: "Per dataset documentation, reviews should only exist on delivered orders. A non-zero count indicates a data quality anomaly."
+      }
+    ]
+  },
+  {
+    id: "ex-03",
+    category: "Core Sales KPIs",
+    title: "Core Sales KPIs",
+    difficulty: "Beginner",
+    concepts: ["COUNT","SUM","AVG","WHERE (NOT IN)","COALESCE","NULLIF","ROUND","CTE"],
+    businessContext: "The most fundamental business question: how much are we selling, to how many orders, at what average order value, and how many units? These are the headline KPIs for the Gayanara store.",
+    sourceFile: "03_core_sales_kpis.sql",
+    sourceSQL: "-- Business question: What are Gayanara's core realized-sales KPIs?\n-- Grain: order-level for revenue/orders/AOV; detail-level is not joined here.\n-- Relevant tables: orders.\n-- Metric population: valid orders exclude cancelled and returned.\n\nSELECT\n    COUNT(*) AS valid_orders,\n    COALESCE(SUM(total_amount_idr), 0) AS valid_revenue_idr,\n    ROUND(\n        COALESCE(SUM(total_amount_idr), 0)::NUMERIC\n        / NULLIF(COUNT(*), 0), 2\n    ) AS aov_idr\nFROM orders\nWHERE order_status NOT IN ('cancelled', 'returned');\n\n-- Units require order_items; aggregate at order first to keep one row per order.\nWITH valid_order_units AS (\n    SELECT o.order_id, SUM(oi.quantity) AS units_sold\n    FROM orders o\n    JOIN order_items oi ON oi.order_id = o.order_id\n    WHERE o.order_status NOT IN ('cancelled', 'returned')\n    GROUP BY o.order_id\n)\nSELECT\n    COUNT(*) AS valid_orders_with_items,\n    COALESCE(SUM(units_sold), 0) AS units_sold,\n    ROUND(AVG(units_sold), 2) AS avg_units_per_order\nFROM valid_order_units;",
+    subs: [
+      {
+        id: "ex-03-s1", title: "Order-Level KPIs (Revenue, Orders, AOV)",
+        question: "Calculate total valid orders, valid revenue, and average order value from the orders table alone.",
+        requirements: ["Filter: order_status NOT IN ('cancelled','returned')","Calculate COUNT(*) as valid_orders","Calculate COALESCE(SUM(total_amount_idr),0) as valid_revenue_idr","Calculate AOV = revenue / count, rounded to 2 dp using NULLIF for zero-division safety"],
+        expectedOutput: { columns: ["valid_orders","valid_revenue_idr","aov_idr"], columnNotes: ["Count of valid orders","Sum of total_amount_idr (IDR)","Average order value, 2 dp"], grain: "Single aggregate row (entire dataset)", sortOrder: "N/A" },
+        metricDefs: "Valid orders: exclude cancelled and returned. Revenue: SUM(orders.total_amount_idr). AOV: valid_revenue / valid_orders."
+      },
+      {
+        id: "ex-03-s2", title: "Unit-Level KPIs (Units Sold, Avg Units Per Order)",
+        question: "Calculate total units sold and average units per order using a CTE that aggregates order_items to order level first.",
+        requirements: ["Use a CTE: JOIN orders to order_items, filter valid orders, GROUP BY order_id to get SUM(quantity) per order","From the CTE: COUNT(*) as valid_orders_with_items, SUM(units_sold) as total units, AVG(units_sold) as avg_units_per_order","Use COALESCE for null safety"],
+        expectedOutput: { columns: ["valid_orders_with_items","units_sold","avg_units_per_order"], columnNotes: ["Valid orders with at least one item row","Total units (SUM of quantity)","Average units per order, 2 dp"], grain: "Single aggregate row (entire dataset)", sortOrder: "N/A" },
+        metricDefs: "Units: SUM(order_items.quantity) on valid orders. Aggregate at order level first to avoid fan-out. Avg units = total_units / orders_with_items."
+      }
+    ]
+  },
+  {
+    id: "ex-04",
+    category: "Sales Trends and Period Comparisons",
+    title: "Monthly Sales Trend with MoM Changes",
+    difficulty: "Intermediate",
+    concepts: ["DATE_TRUNC","LAG (window)","CTE","JOIN","ORDER BY","ROUND","NULLIF"],
+    businessContext: "Understanding how sales evolve month over month is essential for spotting seasonal patterns, identifying growth or decline, and planning inventory and marketing.",
+    sourceFile: "04_sales_trend_mom.sql",
+    sourceSQL: "-- Business question: How do revenue, orders, units, and AOV change over time?\n-- Grain: one row per calendar month.\n-- Relevant tables: orders, order_items.\n-- Revenue uses orders.total_amount_idr; valid orders exclude cancelled and returned.\n\nWITH monthly_orders AS (\n    SELECT\n        DATE_TRUNC('month', o.order_date)::DATE AS month,\n        COUNT(*) AS orders,\n        SUM(o.total_amount_idr) AS revenue_idr,\n        AVG(o.total_amount_idr) AS aov_idr\n    FROM orders o\n    WHERE o.order_status NOT IN ('cancelled', 'returned')\n    GROUP BY 1\n),\nmonthly_units AS (\n    SELECT\n        DATE_TRUNC('month', o.order_date)::DATE AS month,\n        SUM(oi.quantity) AS units_sold\n    FROM orders o\n    JOIN order_items oi ON oi.order_id = o.order_id\n    WHERE o.order_status NOT IN ('cancelled', 'returned')\n    GROUP BY 1\n),\ncombined AS (\n    SELECT mo.*, mu.units_sold\n    FROM monthly_orders mo\n    JOIN monthly_units mu USING (month)\n)\nSELECT\n    month,\n    orders,\n    revenue_idr,\n    units_sold,\n    ROUND(aov_idr, 2) AS aov_idr,\n    LAG(revenue_idr) OVER (ORDER BY month) AS prev_month_revenue_idr,\n    ROUND(\n        100.0 * (revenue_idr - LAG(revenue_idr) OVER (ORDER BY month))\n        / NULLIF(LAG(revenue_idr) OVER (ORDER BY month), 0), 2\n    ) AS revenue_mom_pct,\n    ROUND(\n        100.0 * (orders - LAG(orders) OVER (ORDER BY month))\n        / NULLIF(LAG(orders) OVER (ORDER BY month), 0), 2\n    ) AS orders_mom_pct\nFROM combined\nORDER BY month;",
+    subs: [
+      {
+        id: "ex-04-s1", title: "Monthly Trend with Month-over-Month Changes",
+        question: "Build a monthly sales trend showing orders, revenue, units, AOV per calendar month, with LAG-based MoM percentage changes for revenue and orders.",
+        requirements: ["Use DATE_TRUNC('month', order_date)::DATE for calendar months","Separate CTEs for orders/revenue (from orders table) and units (from order_items)","Join the two CTEs on month","Use LAG() OVER (ORDER BY month) for previous month values","Calculate revenue_mom_pct and orders_mom_pct as (current - prev) / prev × 100, 2 dp","First month will have NULL MoM values (expected)"],
+        expectedOutput: { columns: ["month","orders","revenue_idr","units_sold","aov_idr","prev_month_revenue_idr","revenue_mom_pct","orders_mom_pct"], columnNotes: ["Calendar month (YYYY-MM-01)","Valid order count","Sum of total_amount_idr","Units from valid orders' items","AOV, 2 dp","Previous month revenue (NULL for first)","MoM revenue %, 2 dp (NULL first)","MoM orders %, 2 dp (NULL first)"], grain: "One row per calendar month", sortOrder: "month ASC" },
+        metricDefs: "Valid orders: exclude cancelled/returned. MoM %: (current - previous) / previous × 100. LAG returns NULL for the first month."
+      }
+    ]
+  },
+  {
+    id: "ex-05",
+    category: "Geography and Payment Analysis",
+    title: "Geography, Payment, and Status Distribution",
+    difficulty: "Intermediate",
+    concepts: ["GROUP BY","CROSS JOIN","SUM (window)","FILTER","CASE","LIMIT","ROUND"],
+    businessContext: "Understanding where sales come from geographically and which payment methods drive revenue helps with logistics planning, regional marketing, and payment gateway optimization. Order status distribution gives a snapshot of operational health.",
+    sourceFile: "05_geography_payment_status.sql",
+    sourceSQL: "-- Business question: Which destinations and payment methods contribute most to sales, and how are orders distributed by status?\n-- Grain: one row per shipping province/city or payment/status group.\n-- Relevant tables: orders.\n-- Revenue population: valid orders for realized-sales contribution; status analysis includes all orders.\n\nWITH valid_orders AS (\n    SELECT *\n    FROM orders\n    WHERE order_status NOT IN ('cancelled', 'returned')\n),\ntotal AS (\n    SELECT SUM(total_amount_idr) AS total_revenue_idr FROM valid_orders\n)\nSELECT\n    shipping_province,\n    COUNT(*) AS valid_orders,\n    SUM(total_amount_idr) AS revenue_idr,\n    ROUND(100.0 * SUM(total_amount_idr) / NULLIF(MAX(total.total_revenue_idr), 0), 2) AS revenue_contribution_pct\nFROM valid_orders\nCROSS JOIN total\nGROUP BY shipping_province\nORDER BY revenue_idr DESC;\n\nSELECT\n    shipping_city,\n    shipping_province,\n    COUNT(*) AS valid_orders,\n    SUM(total_amount_idr) AS revenue_idr\nFROM orders\nWHERE order_status NOT IN ('cancelled', 'returned')\nGROUP BY shipping_city, shipping_province\nORDER BY revenue_idr DESC\nLIMIT 20;\n\nSELECT\n    payment_method,\n    COUNT(*) AS valid_orders,\n    SUM(total_amount_idr) AS revenue_idr,\n    ROUND(AVG(total_amount_idr), 2) AS aov_idr\nFROM orders\nWHERE order_status NOT IN ('cancelled', 'returned')\nGROUP BY payment_method\nORDER BY revenue_idr DESC;\n\nSELECT\n    order_status,\n    COUNT(*) AS orders,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2) AS order_share_pct\nFROM orders\nGROUP BY order_status\nORDER BY orders DESC;",
+    subs: [
+      {
+        id: "ex-05-s1", title: "Revenue by Shipping Province",
+        question: "Show valid order count, revenue, and revenue contribution percentage for each shipping province, using a CROSS JOIN with a total-revenue CTE.",
+        requirements: ["CTE for valid orders (exclude cancelled/returned)","CTE for total valid revenue","CROSS JOIN valid_orders with total CTE","GROUP BY shipping_province","Calculate revenue_contribution_pct = province_revenue / total_revenue × 100, 2 dp","Order by revenue_idr DESC"],
+        expectedOutput: { columns: ["shipping_province","valid_orders","revenue_idr","revenue_contribution_pct"], columnNotes: ["Province name","Valid order count","Sum of total_amount_idr","% of total valid revenue, 2 dp"], grain: "One row per shipping_province", sortOrder: "revenue_idr DESC" },
+        metricDefs: "Valid orders: exclude cancelled/returned. Revenue contribution: province revenue / total valid revenue × 100."
+      },
+      {
+        id: "ex-05-s2", title: "Top 20 Cities by Revenue",
+        question: "Show the top 20 shipping cities by revenue among valid orders, with province context.",
+        requirements: ["Filter valid orders","GROUP BY shipping_city, shipping_province","Order by revenue_idr DESC","LIMIT 20"],
+        expectedOutput: { columns: ["shipping_city","shipping_province","valid_orders","revenue_idr"], columnNotes: ["City name","Province","Valid order count","Sum of total_amount_idr"], grain: "One row per city × province (top 20)", sortOrder: "revenue_idr DESC, LIMIT 20" },
+        metricDefs: "Valid orders only. Note: shipping city is the delivery destination, not the customer's registered city."
+      },
+      {
+        id: "ex-05-s3", title: "Payment Method Breakdown",
+        question: "Show valid order count, revenue, and AOV for each payment method.",
+        requirements: ["Filter valid orders","GROUP BY payment_method","Calculate COUNT, SUM(total_amount_idr), ROUND(AVG(total_amount_idr),2)","Order by revenue_idr DESC"],
+        expectedOutput: { columns: ["payment_method","valid_orders","revenue_idr","aov_idr"], columnNotes: ["Payment method (Transfer Bank, GoPay, OVO, etc.)","Valid order count","Sum of total_amount_idr","Average order value, 2 dp"], grain: "One row per payment_method", sortOrder: "revenue_idr DESC" },
+        metricDefs: "Valid orders only. AOV: revenue / order count per payment method."
+      },
+      {
+        id: "ex-05-s4", title: "Order Status Distribution (All Orders)",
+        question: "Show the distribution of ALL orders (not just valid) by status, with count and share percentage.",
+        requirements: ["Use ALL orders (no status filter)","GROUP BY order_status","Calculate COUNT and share % using SUM(COUNT(*)) OVER () window","Order by orders DESC"],
+        expectedOutput: { columns: ["order_status","orders","order_share_pct"], columnNotes: ["Status value (delivered, shipped, processing, cancelled, returned)","Order count","% of total, 2 dp (window denominator)"], grain: "One row per distinct order_status (5 rows)", sortOrder: "orders DESC" },
+        metricDefs: "This uses ALL orders, not just valid ones. Denominator for share = total orders across all statuses."
+      }
+    ]
+  },
+  {
+    id: "ex-06",
+    category: "Product, Category, and Brand Performance",
+    title: "Top Products by Units and Revenue",
+    difficulty: "Intermediate",
+    concepts: ["RANK (window)","CTE","JOIN","COUNT (DISTINCT)","SUM"],
+    businessContext: "Identifying top-selling products is fundamental for inventory planning, marketing focus, and understanding what drives the business. This ranks products by both units and revenue to find top performers on either dimension.",
+    sourceFile: "06_top_products.sql",
+    sourceSQL: "-- Business question: Which products lead by units and revenue?\n-- Grain: one row per product after aggregating order_items.\n-- Relevant tables: orders, order_items, products.\n-- Valid sales exclude cancelled and returned orders.\n-- Product revenue uses order_items.subtotal_idr.\n\nWITH product_sales AS (\n    SELECT\n        oi.product_id,\n        SUM(oi.quantity) AS units_sold,\n        SUM(oi.subtotal_idr) AS product_revenue_idr,\n        COUNT(DISTINCT oi.order_id) AS order_count\n    FROM order_items oi\n    JOIN orders o ON o.order_id = oi.order_id\n    WHERE o.order_status NOT IN ('cancelled', 'returned')\n    GROUP BY oi.product_id\n),\nranked AS (\n    SELECT\n        p.product_id,\n        p.name,\n        p.category,\n        p.brand,\n        ps.units_sold,\n        ps.product_revenue_idr,\n        ps.order_count,\n        RANK() OVER (ORDER BY ps.units_sold DESC) AS unit_rank,\n        RANK() OVER (ORDER BY ps.product_revenue_idr DESC) AS revenue_rank\n    FROM product_sales ps\n    JOIN products p ON p.product_id = ps.product_id\n)\nSELECT *\nFROM ranked\nWHERE unit_rank <= 10 OR revenue_rank <= 10\nORDER BY revenue_rank, unit_rank, product_id;",
+    subs: [
+      {
+        id: "ex-06-s1", title: "Top 10 Products by Units and Revenue (Combined)",
+        question: "Rank all products by units sold and by revenue, then return the union of top 10 by units and top 10 by revenue with product details.",
+        requirements: ["Aggregate valid order_items to product level: SUM(quantity), SUM(subtotal_idr), COUNT(DISTINCT order_id)","RANK() for both units and revenue","Filter WHERE unit_rank ≤ 10 OR revenue_rank ≤ 10","Join to products for name, category, brand","Order by revenue_rank, unit_rank, product_id"],
+        expectedOutput: { columns: ["product_id","name","category","brand","units_sold","product_revenue_idr","order_count","unit_rank","revenue_rank"], columnNotes: ["Product ID","Product name","Raw category","Brand","Units sold (valid)","Item revenue (SUM subtotal_idr)","Distinct valid orders","Rank by units DESC","Rank by revenue DESC"], grain: "One row per product (max ~20)", sortOrder: "revenue_rank ASC, unit_rank ASC, product_id ASC" },
+        metricDefs: "Valid orders only. Product revenue: SUM(order_items.subtotal_idr). RANK gives ties the same rank. The OR filter means a product in top 10 on either metric is included."
+      }
+    ]
+  },
+  {
+    id: "ex-07",
+    category: "Product, Category, and Brand Performance",
+    title: "Category and Brand Performance",
+    difficulty: "Intermediate",
+    concepts: ["CASE (normalization)","CTE","JOIN (multi-table)","RANK","SUM (window)","GROUP BY"],
+    businessContext: "Product categories have inconsistent naming in the dataset (e.g. 'Dress' vs 'dress', 'Jacket' vs 'Jaket'). Before analyzing performance, categories must be normalized. Note: values like 'Jaket', 'Kaos', 'Kemeja' are original Indonesian dataset values preserved for accuracy.",
+    sourceFile: "07_category_brand_performance.sql",
+    sourceSQL: "-- Business question: Which normalized categories, sub-categories, and brands are strongest by revenue and units?\n-- Grain: one row per normalized category/sub-category/brand after detail aggregation.\n-- Relevant tables: products, order_items, orders.\n-- Valid sales exclude cancelled and returned orders.\n\nWITH product_clean AS (\n    SELECT\n        product_id,\n        brand,\n        sub_category,\n        CASE\n            WHEN LOWER(TRIM(category)) = 'dress' THEN 'Dress'\n            WHEN LOWER(TRIM(category)) IN ('jacket', 'jaket') THEN 'Jaket'\n            WHEN LOWER(TRIM(category)) = 'kaos' THEN 'Kaos'\n            WHEN LOWER(TRIM(category)) = 'kemeja' THEN 'Kemeja'\n            WHEN LOWER(TRIM(category)) = 't-shirt' THEN 'T-Shirt'\n            ELSE TRIM(category)\n        END AS category_normalized\n    FROM products\n),\nsales AS (\n    SELECT\n        pc.category_normalized,\n        pc.sub_category,\n        pc.brand,\n        SUM(oi.quantity) AS units_sold,\n        SUM(oi.subtotal_idr) AS revenue_idr,\n        COUNT(DISTINCT oi.order_id) AS order_count\n    FROM order_items oi\n    JOIN orders o ON o.order_id = oi.order_id\n    JOIN product_clean pc ON pc.product_id = oi.product_id\n    WHERE o.order_status NOT IN ('cancelled', 'returned')\n    GROUP BY pc.category_normalized, pc.sub_category, pc.brand\n)\nSELECT *\nFROM sales\nORDER BY revenue_idr DESC;\n\n-- Category-only ranking.\nWITH product_clean AS (\n    SELECT\n        product_id,\n        CASE\n            WHEN LOWER(TRIM(category)) = 'dress' THEN 'Dress'\n            WHEN LOWER(TRIM(category)) IN ('jacket', 'jaket') THEN 'Jaket'\n            WHEN LOWER(TRIM(category)) = 'kaos' THEN 'Kaos'\n            WHEN LOWER(TRIM(category)) = 'kemeja' THEN 'Kemeja'\n            WHEN LOWER(TRIM(category)) = 't-shirt' THEN 'T-Shirt'\n            ELSE TRIM(category)\n        END AS category_normalized\n    FROM products\n),\ncategory_sales AS (\n    SELECT\n        pc.category_normalized,\n        SUM(oi.quantity) AS units_sold,\n        SUM(oi.subtotal_idr) AS revenue_idr\n    FROM order_items oi\n    JOIN orders o ON o.order_id = oi.order_id\n    JOIN product_clean pc ON pc.product_id = oi.product_id\n    WHERE o.order_status NOT IN ('cancelled', 'returned')\n    GROUP BY pc.category_normalized\n)\nSELECT\n    category_normalized,\n    units_sold,\n    revenue_idr,\n    RANK() OVER (ORDER BY revenue_idr DESC) AS revenue_rank,\n    ROUND(100.0 * revenue_idr / SUM(revenue_idr) OVER (), 2) AS revenue_contribution_pct\nFROM category_sales\nORDER BY revenue_rank;",
+    subs: [
+      {
+        id: "ex-07-s1", title: "Category × Sub-category × Brand Performance",
+        question: "Normalize product categories, then show revenue, units, and order count for each combination of normalized category, sub-category, and brand.",
+        requirements: ["Create a CTE normalizing category: dress→Dress, jacket/jaket→Jaket, kaos→Kaos, kemeja→Kemeja, t-shirt→T-Shirt, else TRIM(category)","JOIN order_items → orders (valid) → product_clean","GROUP BY category_normalized, sub_category, brand","Calculate SUM(quantity), SUM(subtotal_idr), COUNT(DISTINCT order_id)","Order by revenue_idr DESC"],
+        expectedOutput: { columns: ["category_normalized","sub_category","brand","units_sold","revenue_idr","order_count"], columnNotes: ["Normalized category","Sub-category value","Brand name","Units (valid orders)","Item revenue (valid orders)","Distinct valid orders"], grain: "One row per (category, sub_category, brand)", sortOrder: "revenue_idr DESC" },
+        metricDefs: "Category normalization mapping preserves original Indonesian values (Jaket, Kaos, Kemeja). Revenue: SUM(order_items.subtotal_idr) on valid orders only."
+      },
+      {
+        id: "ex-07-s2", title: "Category Ranking with Revenue Contribution",
+        question: "Aggregate to normalized category level only, add RANK by revenue and revenue contribution percentage using a window function.",
+        requirements: ["Same category normalization CTE","Aggregate to category level only (no sub_category or brand)","RANK() OVER (ORDER BY revenue_idr DESC)","Revenue contribution: 100 × category_revenue / SUM(revenue_idr) OVER (), 2 dp","Order by revenue_rank"],
+        expectedOutput: { columns: ["category_normalized","units_sold","revenue_idr","revenue_rank","revenue_contribution_pct"], columnNotes: ["Normalized category","Units sold","Item revenue","Rank by revenue DESC","% of total revenue, 2 dp"], grain: "One row per normalized category", sortOrder: "revenue_rank ASC" },
+        metricDefs: "Revenue contribution uses window SUM as denominator (all categories). RANK handles ties."
+      }
+    ]
+  },
+  {
+    id: "ex-08",
+    category: "Stock and Sales Opportunities",
+    title: "Stock and Sales Opportunity Flags",
+    difficulty: "Intermediate",
+    concepts: ["LEFT JOIN","CASE (flagging)","COALESCE","ORDER BY (CASE)","CTE"],
+    businessContext: "Products with high sales but low stock risk losing revenue, while products with high stock but no sales tie up capital. This flags products into opportunity categories based on current stock and observed sales. Stock is a snapshot, not historical inventory.",
+    sourceFile: "08_stock_sales_opportunities.sql",
+    sourceSQL: "-- Business question: Which products have high sales with low current stock, and which have high stock with low/no sales?\n-- Grain: one row per product.\n-- Relevant tables: products, orders, order_items.\n-- Stock is the current snapshot only; it is not historical inventory.\n-- Sales exclude cancelled and returned orders.\n\nWITH product_sales AS (\n    SELECT\n        oi.product_id,\n        SUM(oi.quantity) AS units_sold\n    FROM order_items oi\n    JOIN orders o ON o.order_id = oi.order_id\n    WHERE o.order_status NOT IN ('cancelled', 'returned')\n    GROUP BY oi.product_id\n),\nscored AS (\n    SELECT\n        p.product_id,\n        p.name,\n        p.category,\n        p.brand,\n        p.stock,\n        COALESCE(ps.units_sold, 0) AS units_sold,\n        CASE\n            WHEN p.stock = 0 AND COALESCE(ps.units_sold, 0) > 0 THEN 'Out of stock + sold'\n            WHEN p.stock <= 20 AND COALESCE(ps.units_sold, 0) > 0 THEN 'Low stock + sold'\n            WHEN p.stock >= 150 AND COALESCE(ps.units_sold, 0) <= 5 THEN 'High stock + low/no sales'\n            WHEN COALESCE(ps.units_sold, 0) = 0 THEN 'No recorded valid sales'\n            ELSE 'Other'\n        END AS opportunity_flag\n    FROM products p\n    LEFT JOIN product_sales ps ON ps.product_id = p.product_id\n)\nSELECT *\nFROM scored\nWHERE opportunity_flag <> 'Other'\nORDER BY\n    CASE opportunity_flag\n        WHEN 'Out of stock + sold' THEN 1\n        WHEN 'Low stock + sold' THEN 2\n        WHEN 'High stock + low/no sales' THEN 3\n        WHEN 'No recorded valid sales' THEN 4\n        ELSE 5\n    END,\n    units_sold DESC,\n    stock DESC;",
+    subs: [
+      {
+        id: "ex-08-s1", title: "Product Opportunity Flag Classification",
+        question: "Flag each product into an opportunity category based on current stock and observed valid sales. Exclude 'Other' rows. Order by flag priority.",
+        requirements: ["CTE aggregating valid order_items to product level (SUM quantity)","LEFT JOIN products to sales CTE","COALESCE(units_sold, 0) for products with no sales","Flags: stock=0+sold>0→'Out of stock + sold'; stock≤20+sold>0→'Low stock + sold'; stock≥150+sold≤5→'High stock + low/no sales'; sold=0→'No recorded valid sales'","Exclude 'Other' from output","Order by CASE priority 1-4, units_sold DESC, stock DESC"],
+        expectedOutput: { columns: ["product_id","name","category","brand","stock","units_sold","opportunity_flag"], columnNotes: ["Product ID","Name","Raw category","Brand","Current stock (snapshot)","Units sold (0 if none)","Flag string"], grain: "One row per product (excluding 'Other')", sortOrder: "Flag priority ASC, units_sold DESC, stock DESC" },
+        metricDefs: "Stock is a current snapshot. Units: SUM(quantity) on valid orders. Thresholds: out of stock=0, low=≤20, high=≥150, low sales=≤5. These are analytical choices, not documented business rules."
+      }
+    ]
+  },
+  {
+    id: "ex-09",
+    category: "Product, Category, and Brand Performance",
+    title: "Price, Rating, and Sales Relationship",
+    difficulty: "Intermediate",
+    concepts: ["LEFT JOIN","CASE (signal)","COALESCE","GROUP BY","AVG","price bands"],
+    businessContext: "Understanding the relationship between a product's listed price, its customer rating, and its sales volume helps inform pricing strategy. This is descriptive association, not causal inference. Note: products.price_idr is current list price; order_items.unit_price_idr is historical transaction price.",
+    sourceFile: "09_price_rating_sales.sql",
+    sourceSQL: "-- Business question: How do current listed price and product rating relate to observed sales?\n-- Grain: one row per product.\n-- Relevant tables: products, order_items, orders.\n-- Current price is products.price_idr; historical transaction price is order_items.unit_price_idr.\n-- This is descriptive association, not causal inference.\n\nWITH product_sales AS (\n    SELECT\n        oi.product_id,\n        SUM(oi.quantity) AS units_sold,\n        SUM(oi.subtotal_idr) AS revenue_idr\n    FROM order_items oi\n    JOIN orders o ON o.order_id = oi.order_id\n    WHERE o.order_status NOT IN ('cancelled', 'returned')\n    GROUP BY oi.product_id\n)\nSELECT\n    p.product_id,\n    p.name,\n    p.category,\n    p.price_idr AS current_price_idr,\n    p.avg_rating,\n    COALESCE(ps.units_sold, 0) AS units_sold,\n    COALESCE(ps.revenue_idr, 0) AS revenue_idr,\n    CASE\n        WHEN COALESCE(ps.units_sold, 0) >= 20 AND p.avg_rating >= 4.5\n            THEN 'High sales + high rating'\n        WHEN COALESCE(ps.units_sold, 0) >= 20 AND p.avg_rating < 4.0\n            THEN 'High sales + lower rating'\n        WHEN COALESCE(ps.units_sold, 0) <= 5 AND p.avg_rating >= 4.5\n            THEN 'Low sales + high rating'\n        ELSE 'Other'\n    END AS product_signal\nFROM products p\nLEFT JOIN product_sales ps ON ps.product_id = p.product_id\nORDER BY units_sold DESC, avg_rating DESC;\n\n-- Descriptive price-band comparison.\nWITH product_sales AS (\n    SELECT oi.product_id, SUM(oi.quantity) AS units_sold\n    FROM order_items oi\n    JOIN orders o ON o.order_id = oi.order_id\n    WHERE o.order_status NOT IN ('cancelled', 'returned')\n    GROUP BY oi.product_id\n)\nSELECT\n    CASE\n        WHEN p.price_idr < 250000 THEN '<250K'\n        WHEN p.price_idr < 500000 THEN '250K-<500K'\n        WHEN p.price_idr < 750000 THEN '500K-<750K'\n        ELSE '>=750K'\n    END AS price_band,\n    COUNT(*) AS products,\n    ROUND(AVG(COALESCE(ps.units_sold, 0)), 2) AS avg_units_sold_per_product,\n    SUM(COALESCE(ps.units_sold, 0)) AS total_units_sold\nFROM products p\nLEFT JOIN product_sales ps ON ps.product_id = p.product_id\nGROUP BY 1\nORDER BY MIN(p.price_idr);",
+    subs: [
+      {
+        id: "ex-09-s1", title: "Product Signal (Price × Rating × Sales)",
+        question: "For each product, show current price, rating, units sold, revenue, and assign a product_signal flag based on units and rating thresholds.",
+        requirements: ["CTE for valid product sales (units, revenue)","LEFT JOIN products to include products with no sales (COALESCE to 0)","Signal: units≥20+rating≥4.5→'High sales + high rating'; units≥20+rating<4.0→'High sales + lower rating'; units≤5+rating≥4.5→'Low sales + high rating'; else 'Other'","Order by units_sold DESC, avg_rating DESC"],
+        expectedOutput: { columns: ["product_id","name","category","current_price_idr","avg_rating","units_sold","revenue_idr","product_signal"], columnNotes: ["Product ID","Name","Raw category","Current list price (IDR)","Avg rating (products table)","Units sold (0 if none)","Item revenue (0 if none)","Signal flag"], grain: "One row per product", sortOrder: "units_sold DESC, avg_rating DESC" },
+        metricDefs: "Descriptive only, not causal. Current price: products.price_idr. Units/revenue from valid orders. Signal thresholds: high sales=≥20, low sales=≤5, high rating=≥4.5, lower rating=<4.0."
+      },
+      {
+        id: "ex-09-s2", title: "Price Band Comparison",
+        question: "Group products into four price bands and compare average and total units sold per band.",
+        requirements: ["Price bands: <250000, 250000-<500000, 500000-<750000, >=750000","LEFT JOIN products to sales CTE","GROUP BY price band","Calculate: COUNT(*) as products, ROUND(AVG(units),2), SUM(units)","Order by MIN(price_idr) to sort bands low-to-high"],
+        expectedOutput: { columns: ["price_band","products","avg_units_sold_per_product","total_units_sold"], columnNotes: ["Band label","Product count in band","Avg units per product, 2 dp","Total units in band"], grain: "One row per price band (4 rows)", sortOrder: "MIN(price_idr) ASC (lowest band first)" },
+        metricDefs: "Price bands use products.price_idr (current list price). Units from valid orders. This is a descriptive comparison, not a pricing recommendation."
+      }
+    ]
+  },
+  {
+    id: "ex-10",
+    category: "Customer Analytics and Segmentation",
+    title: "Customer Repeat Behavior and Value Ranking",
+    difficulty: "Intermediate",
+    concepts: ["CTE","GROUP BY","FILTER (WHERE)","RANK","MIN/MAX (dates)","LIMIT"],
+    businessContext: "Understanding customer loyalty is critical for retention strategy. This measures how many customers buy, how often they return, and identifies the highest-value customers using a combined rank-based approach.",
+    sourceFile: "10_customer_repeat_value.sql",
+    sourceSQL: "-- Business question: How many customers buy, how often do they buy, and which customers are high value?\n-- Grain: one row per customer after order aggregation.\n-- Relevant tables: customers, orders.\n-- Valid orders exclude cancelled and returned.\n\nWITH customer_sales AS (\n    SELECT\n        c.customer_id,\n        c.name,\n        c.gender,\n        c.age_group,\n        c.city,\n        c.province,\n        COUNT(o.order_id) AS valid_order_count,\n        SUM(o.total_amount_idr) AS revenue_idr,\n        MIN(o.order_date) AS first_valid_order_date,\n        MAX(o.order_date) AS last_valid_order_date\n    FROM customers c\n    JOIN orders o ON o.customer_id = c.customer_id\n    WHERE o.order_status NOT IN ('cancelled', 'returned')\n    GROUP BY c.customer_id, c.name, c.gender, c.age_group, c.city, c.province\n)\nSELECT\n    COUNT(*) AS buying_customers,\n    ROUND(AVG(valid_order_count), 2) AS avg_orders_per_buying_customer,\n    ROUND(AVG(revenue_idr), 2) AS avg_revenue_per_buying_customer,\n    COUNT(*) FILTER (WHERE valid_order_count = 1) AS one_time_buyers,\n    COUNT(*) FILTER (WHERE valid_order_count > 1) AS repeat_buyers,\n    ROUND(100.0 * COUNT(*) FILTER (WHERE valid_order_count > 1) / NULLIF(COUNT(*), 0), 2) AS repeat_buyer_rate_pct\nFROM customer_sales;\n\n-- Customer value ranking using revenue, order count, and a simple rank-based combined signal.\nWITH customer_sales AS (\n    SELECT\n        o.customer_id,\n        COUNT(*) AS order_count,\n        SUM(o.total_amount_idr) AS revenue_idr\n    FROM orders o\n    WHERE o.order_status NOT IN ('cancelled', 'returned')\n    GROUP BY o.customer_id\n),\nranked AS (\n    SELECT *,\n           RANK() OVER (ORDER BY revenue_idr DESC) AS revenue_rank,\n           RANK() OVER (ORDER BY order_count DESC) AS order_rank\n    FROM customer_sales\n)\nSELECT\n    customer_id,\n    order_count,\n    revenue_idr,\n    revenue_rank,\n    order_rank,\n    revenue_rank + order_rank AS combined_rank_score\nFROM ranked\nORDER BY combined_rank_score, customer_id\nLIMIT 25;",
+    subs: [
+      {
+        id: "ex-10-s1", title: "Customer Repeat Behavior Summary",
+        question: "Calculate: total buying customers, average orders per customer, average revenue per customer, one-time vs repeat buyers, and repeat buyer rate percentage.",
+        requirements: ["Join customers to valid orders, aggregate per customer","Compute summary metrics using COUNT, AVG, and COUNT(*) FILTER (WHERE ...)","Repeat buyer rate: repeat / total buying × 100, 2 dp"],
+        expectedOutput: { columns: ["buying_customers","avg_orders_per_buying_customer","avg_revenue_per_buying_customer","one_time_buyers","repeat_buyers","repeat_buyer_rate_pct"], columnNotes: ["Customers with ≥1 valid order","Avg orders/customer, 2 dp","Avg revenue/customer, 2 dp","Customers with exactly 1 order","Customers with 2+ orders","Repeat rate %, 2 dp"], grain: "Single aggregate row", sortOrder: "N/A" },
+        metricDefs: "Buying customer: has ≥1 valid order. Repeat: >1 valid order. Revenue: SUM(total_amount_idr) for valid orders. Repeat rate uses NULLIF to avoid division by zero."
+      },
+      {
+        id: "ex-10-s2", title: "Top 25 Customers by Combined Rank Score",
+        question: "Rank customers by revenue and by order count separately, compute a combined score (sum of both ranks), and return the top 25.",
+        requirements: ["Aggregate valid orders per customer (count, revenue)","RANK() OVER for revenue DESC and order_count DESC","combined_rank_score = revenue_rank + order_rank","ORDER BY combined_rank_score ASC, customer_id ASC","LIMIT 25"],
+        expectedOutput: { columns: ["customer_id","order_count","revenue_idr","revenue_rank","order_rank","combined_rank_score"], columnNotes: ["Customer ID","Valid order count","Total valid revenue (IDR)","Rank by revenue","Rank by orders","Sum of both ranks (lower=better)"], grain: "One row per customer (top 25)", sortOrder: "combined_rank_score ASC, customer_id ASC, LIMIT 25" },
+        metricDefs: "Combined score is a simple rank-based approach (not weighted or normalized). Lower score = better performer on both dimensions simultaneously."
+      }
+    ]
+  },
+  {
+    id: "ex-11",
+    category: "Customer Analytics and Segmentation",
+    title: "RFM Customer Segmentation",
+    difficulty: "Advanced",
+    concepts: ["NTILE (window)","CROSS JOIN","DATE subtraction","CASE","CTE (multiple)"],
+    businessContext: "RFM (Recency, Frequency, Monetary) is a classic customer segmentation technique. This builds a simplified RFM model using NTILE quartile scoring and assigns business-meaningful segment labels. Thresholds are analytical choices, not documented business rules.",
+    sourceFile: "11_customer_segment.sql",
+    sourceSQL: "-- Business question: Which customer segments combine recency, frequency, and monetary value?\n-- Grain: one row per buying customer.\n-- Relevant tables: customers, orders.\n-- Valid orders exclude cancelled and returned.\n-- RFM-like scoring is descriptive; thresholds are analytical segmentation choices, not documented business rules.\n\nWITH valid_orders AS (\n    SELECT *\n    FROM orders\n    WHERE order_status NOT IN ('cancelled', 'returned')\n),\ncustomer_metrics AS (\n    SELECT\n        customer_id,\n        MAX(order_date) AS last_order_date,\n        COUNT(*) AS frequency,\n        SUM(total_amount_idr) AS monetary\n    FROM valid_orders\n    GROUP BY customer_id\n),\nreference_date AS (\n    SELECT MAX(order_date) AS max_order_date FROM valid_orders\n),\nscored AS (\n    SELECT\n        cm.*,\n        (rd.max_order_date - cm.last_order_date) AS recency_days,\n        NTILE(4) OVER (ORDER BY cm.last_order_date DESC) AS r_score,\n        NTILE(4) OVER (ORDER BY cm.frequency) AS f_score,\n        NTILE(4) OVER (ORDER BY cm.monetary) AS m_score\n    FROM customer_metrics cm\n    CROSS JOIN reference_date rd\n)\nSELECT\n    customer_id,\n    recency_days,\n    frequency,\n    monetary AS revenue_idr,\n    r_score,\n    f_score,\n    m_score,\n    CASE\n        WHEN r_score >= 3 AND f_score >= 3 AND m_score >= 3 THEN 'High-value active'\n        WHEN f_score >= 3 AND m_score >= 3 THEN 'Frequent high-value'\n        WHEN r_score >= 3 THEN 'Recent buyers'\n        WHEN r_score = 1 AND f_score <= 2 AND m_score <= 2 THEN 'Lapsed low-value'\n        ELSE 'Mid-tier'\n    END AS segment\nFROM scored\nORDER BY revenue_idr DESC;",
+    subs: [
+      {
+        id: "ex-11-s1", title: "RFM Quartile Scoring and Segment Assignment",
+        question: "Score each buying customer on Recency, Frequency, and Monetary using NTILE(4) quartiles, then assign segment labels via CASE logic.",
+        requirements: ["Per-customer: last_order_date (MAX), frequency (COUNT), monetary (SUM total_amount_idr) from valid orders","reference_date CTE with MAX(order_date)","CROSS JOIN to compute recency_days = max_date - last_order_date","NTILE(4): r_score (by last_order_date DESC), f_score (by frequency), m_score (by monetary)","Segments: r≥3+f≥3+m≥3→'High-value active'; f≥3+m≥3→'Frequent high-value'; r≥3→'Recent buyers'; r=1+f≤2+m≤2→'Lapsed low-value'; else→'Mid-tier'","Order by revenue_idr DESC"],
+        expectedOutput: { columns: ["customer_id","recency_days","frequency","revenue_idr","r_score","f_score","m_score","segment"], columnNotes: ["Customer ID","Days since last order","Valid order count","Total valid revenue (IDR)","Recency quartile (4=most recent)","Frequency quartile (4=most)","Monetary quartile (4=highest)","Segment label"], grain: "One row per buying customer", sortOrder: "revenue_idr DESC" },
+        metricDefs: "NTILE(4) divides into 4 equal groups. Score 4 = top quartile. Recency measured from dataset's most recent order date. Segment thresholds are analytical choices."
+      }
+    ]
+  },
+  {
+    id: "ex-12",
+    category: "Cohort and Retention Analysis",
+    title: "Customer Cohort and Retention Analysis",
+    difficulty: "Advanced",
+    concepts: ["CTE (multiple)","DATE_TRUNC","EXTRACT","month difference","DISTINCT","JOIN","ROUND"],
+    businessContext: "Cohort analysis reveals whether new customers come back. Each customer is anchored to their first valid purchase month, and we track what fraction of that cohort makes a purchase in each subsequent month.",
+    sourceFile: "12_customer_cohort_retention.sql",
+    sourceSQL: "-- Business question: What are customer cohorts and their repeat-purchase retention after first valid purchase?\n-- Grain: one row per customer per cohort month and purchase month.\n-- Cohort anchor: each customer's first valid purchase.\n-- Valid orders exclude cancelled and returned.\n-- Retention here means the share of cohort customers with at least one valid order in a later month.\n\nWITH valid_orders AS (\n    SELECT customer_id, order_id, order_date\n    FROM orders\n    WHERE order_status NOT IN ('cancelled', 'returned')\n),\nfirst_purchase AS (\n    SELECT\n        customer_id,\n        DATE_TRUNC('month', MIN(order_date))::DATE AS cohort_month\n    FROM valid_orders\n    GROUP BY customer_id\n),\ncustomer_months AS (\n    SELECT DISTINCT\n        vo.customer_id,\n        DATE_TRUNC('month', vo.order_date)::DATE AS purchase_month\n    FROM valid_orders vo\n),\ncohort_activity AS (\n    SELECT\n        fp.cohort_month,\n        cm.purchase_month,\n        COUNT(DISTINCT cm.customer_id) AS active_customers\n    FROM first_purchase fp\n    JOIN customer_months cm ON cm.customer_id = fp.customer_id\n    GROUP BY fp.cohort_month, cm.purchase_month\n),\ncohort_sizes AS (\n    SELECT cohort_month, COUNT(*) AS cohort_customers\n    FROM first_purchase\n    GROUP BY cohort_month\n)\nSELECT\n    ca.cohort_month,\n    ca.purchase_month,\n    (\n        (EXTRACT(YEAR FROM ca.purchase_month) - EXTRACT(YEAR FROM ca.cohort_month)) * 12\n        + EXTRACT(MONTH FROM ca.purchase_month) - EXTRACT(MONTH FROM ca.cohort_month)\n    )::INT AS month_number,\n    cs.cohort_customers,\n    ca.active_customers,\n    ROUND(100.0 * ca.active_customers / NULLIF(cs.cohort_customers, 0), 2) AS retention_rate_pct\nFROM cohort_activity ca\nJOIN cohort_sizes cs USING (cohort_month)\nORDER BY ca.cohort_month, month_number;",
+    subs: [
+      {
+        id: "ex-12-s1", title: "Monthly Cohort Retention Table",
+        question: "Build a monthly cohort retention table: for each cohort month, track how many customers were active in each subsequent purchase month, and compute retention rate as % of cohort size.",
+        requirements: ["Cohort anchor: DATE_TRUNC('month', MIN(order_date)) per customer from valid orders","Distinct purchase months per customer","Join cohort to purchase months, count active_customers per (cohort_month, purchase_month)","Count total customers per cohort_month","Compute month_number: (YEAR diff × 12) + MONTH diff","Retention rate: active / cohort_size × 100, 2 dp","Order by cohort_month, month_number"],
+        expectedOutput: { columns: ["cohort_month","purchase_month","month_number","cohort_customers","active_customers","retention_rate_pct"], columnNotes: ["First purchase month (YYYY-MM-01)","Purchase month being measured","0=same month, 1=next, etc.","Total in cohort","Active in purchase_month","Retention %, 2 dp"], grain: "One row per (cohort_month, purchase_month)", sortOrder: "cohort_month ASC, month_number ASC" },
+        metricDefs: "Cohort: first valid purchase month. Retention: share of cohort with ≥1 valid order in the given month. month_number 0 = same month as first purchase. Return window = entire dataset range."
+      }
+    ]
+  },
+  {
+    id: "ex-13",
+    category: "Promotion and Discount Analysis",
+    title: "Promotion Code Performance",
+    difficulty: "Beginner",
+    concepts: ["COALESCE","GROUP BY","AVG","SUM","SUM (window)","ROUND","CTE"],
+    businessContext: "Understanding which promotions drive orders and how promotional orders compare to non-promotional ones helps optimize discount strategy. This is observational data — it shows correlation, not causal uplift.",
+    sourceFile: "13_promotion_performance.sql",
+    sourceSQL: "-- Business question: Which promo codes are most used, what revenue do their orders generate, and how does AOV compare with non-promo orders?\n-- Grain: one row per order for promo classification; one row per promo code for performance.\n-- Relevant tables: orders.\n-- Promo usage = non-null promo_code.\n-- Valid sales exclude cancelled and returned.\n-- Observational data does not support causal uplift or profitability claims.\n\nWITH valid_orders AS (\n    SELECT *\n    FROM orders\n    WHERE order_status NOT IN ('cancelled', 'returned')\n),\npromo_summary AS (\n    SELECT\n        COALESCE(promo_code, 'NO_PROMO') AS promo_code,\n        COUNT(*) AS orders,\n        SUM(total_amount_idr) AS revenue_idr,\n        AVG(total_amount_idr) AS aov_idr,\n        SUM(COALESCE(discount_amount_idr, 0)) AS discount_idr\n    FROM valid_orders\n    GROUP BY COALESCE(promo_code, 'NO_PROMO')\n)\nSELECT\n    promo_code,\n    orders,\n    revenue_idr,\n    ROUND(aov_idr, 2) AS aov_idr,\n    discount_idr,\n    ROUND(100.0 * orders / SUM(orders) OVER (), 2) AS order_share_pct\nFROM promo_summary\nORDER BY revenue_idr DESC;\n\nSELECT\n    CASE WHEN promo_code IS NULL THEN 'No promo' ELSE 'Promo used' END AS promo_group,\n    COUNT(*) AS valid_orders,\n    SUM(total_amount_idr) AS revenue_idr,\n    ROUND(AVG(total_amount_idr), 2) AS aov_idr,\n    SUM(COALESCE(discount_amount_idr, 0)) AS discount_idr\nFROM orders\nWHERE order_status NOT IN ('cancelled', 'returned')\nGROUP BY 1\nORDER BY 1;",
+    subs: [
+      {
+        id: "ex-13-s1", title: "Performance by Promo Code (Including NO_PROMO)",
+        question: "Summarize performance by promo code (with 'NO_PROMO' for orders without a code): order count, revenue, AOV, total discount, and order share percentage.",
+        requirements: ["Use COALESCE(promo_code, 'NO_PROMO') for grouping","Valid orders only","Per group: COUNT, SUM(total_amount_idr), AVG, SUM(COALESCE(discount,0))","Order share: 100 × orders / SUM(orders) OVER (), 2 dp","Order by revenue_idr DESC"],
+        expectedOutput: { columns: ["promo_code","orders","revenue_idr","aov_idr","discount_idr","order_share_pct"], columnNotes: ["Promo code or 'NO_PROMO'","Valid order count","Sum of total_amount_idr","AOV, 2 dp","Sum of discount (NULL→0)","% of total valid orders, 2 dp"], grain: "One row per distinct promo_code (incl. NO_PROMO)", sortOrder: "revenue_idr DESC" },
+        metricDefs: "Promo usage: promo_code IS NOT NULL. Valid orders only. Observational data — no causal uplift claims."
+      },
+      {
+        id: "ex-13-s2", title: "Promo vs No-Promo Comparison",
+        question: "Compare the two groups — 'No promo' (NULL promo_code) vs 'Promo used' (non-NULL) — showing orders, revenue, AOV, and discount.",
+        requirements: ["CASE WHEN promo_code IS NULL THEN 'No promo' ELSE 'Promo used'","Valid orders only","Per group: COUNT, SUM, AVG (rounded 2 dp), SUM(COALESCE(discount,0))","ORDER BY group name"],
+        expectedOutput: { columns: ["promo_group","valid_orders","revenue_idr","aov_idr","discount_idr"], columnNotes: ["'No promo' or 'Promo used'","Valid order count","Revenue sum","AOV, 2 dp","Total discount given"], grain: "Two rows", sortOrder: "promo_group ASC" },
+        metricDefs: "This is a two-group descriptive comparison. AOV difference does not prove the promo caused the difference (observational data)."
+      }
+    ]
+  },
+  {
+    id: "ex-14",
+    category: "Promotion and Discount Analysis",
+    title: "Promo Product and Category Mix",
+    difficulty: "Intermediate",
+    concepts: ["CTE","JOIN (multi-table)","GROUP BY","COUNT (DISTINCT)","SUM","LIMIT"],
+    businessContext: "Knowing which products and categories are most frequently purchased in promotional orders helps optimize which items to feature in future promotions.",
+    sourceFile: "14_promo_product_mix.sql",
+    sourceSQL: "-- Business question: Which products/categories are most purchased in orders using promotions?\n-- Grain: product/category after detail aggregation.\n-- Relevant tables: orders, order_items, products.\n-- Valid orders exclude cancelled and returned.\n-- Promo classification is based on non-null promo_code.\n\nWITH promo_items AS (\n    SELECT\n        oi.product_id,\n        oi.quantity,\n        oi.subtotal_idr\n    FROM orders o\n    JOIN order_items oi ON oi.order_id = o.order_id\n    WHERE o.order_status NOT IN ('cancelled', 'returned')\n      AND o.promo_code IS NOT NULL\n)\nSELECT\n    p.category,\n    SUM(pi.quantity) AS units_sold,\n    SUM(pi.subtotal_idr) AS item_revenue_idr,\n    COUNT(DISTINCT pi.product_id) AS products_sold\nFROM promo_items pi\nJOIN products p ON p.product_id = pi.product_id\nGROUP BY p.category\nORDER BY item_revenue_idr DESC;\n\nWITH promo_items AS (\n    SELECT\n        oi.product_id,\n        oi.quantity,\n        oi.subtotal_idr\n    FROM orders o\n    JOIN order_items oi ON oi.order_id = o.order_id\n    WHERE o.order_status NOT IN ('cancelled', 'returned')\n      AND o.promo_code IS NOT NULL\n)\nSELECT\n    p.product_id,\n    p.name,\n    p.category,\n    SUM(pi.quantity) AS units_sold,\n    SUM(pi.subtotal_idr) AS item_revenue_idr\nFROM promo_items pi\nJOIN products p ON p.product_id = pi.product_id\nGROUP BY p.product_id, p.name, p.category\nORDER BY units_sold DESC, item_revenue_idr DESC\nLIMIT 20;",
+    subs: [
+      {
+        id: "ex-14-s1", title: "Category Mix in Promo Orders",
+        question: "Show which product categories are most purchased in orders using a promo code, with units, item revenue, and distinct product count.",
+        requirements: ["CTE: valid orders WHERE promo_code IS NOT NULL, joined to order_items","JOIN to products for category","GROUP BY category","Calculate: SUM(quantity), SUM(subtotal_idr), COUNT(DISTINCT product_id)","Order by item_revenue_idr DESC"],
+        expectedOutput: { columns: ["category","units_sold","item_revenue_idr","products_sold"], columnNotes: ["Raw category value","Total units in promo orders","Sum of subtotal_idr","Distinct products with promo orders"], grain: "One row per category", sortOrder: "item_revenue_idr DESC" },
+        metricDefs: "Promo orders: valid + promo_code IS NOT NULL. Observational — shows which items appear in promo orders, not that the promo caused the purchase."
+      },
+      {
+        id: "ex-14-s2", title: "Top 20 Products in Promo Orders",
+        question: "Show the top 20 individual products by units sold in promotional orders, with revenue context.",
+        requirements: ["Same CTE for promo order items","JOIN to products for name, category","GROUP BY product_id, name, category","Calculate: SUM(quantity), SUM(subtotal_idr)","ORDER BY units_sold DESC, item_revenue_idr DESC","LIMIT 20"],
+        expectedOutput: { columns: ["product_id","name","category","units_sold","item_revenue_idr"], columnNotes: ["Product ID","Product name","Raw category","Units in promo orders","Item revenue in promo orders"], grain: "One row per product (top 20)", sortOrder: "units_sold DESC, item_revenue_idr DESC, LIMIT 20" },
+        metricDefs: "Same promo definition as sub-exercise 1. Product-level granularity for targeted promotion planning."
+      }
+    ]
+  },
+  {
+    id: "ex-15",
+    category: "Logistics and Operations",
+    title: "Logistics and Operations Analysis",
+    difficulty: "Beginner",
+    concepts: ["FILTER (WHERE)","GROUP BY","HAVING","AVG","ROUND","NULLIF"],
+    businessContext: "Logistics performance directly impacts customer satisfaction. No delivery duration is calculated because no delivery timestamp exists in the dataset.",
+    sourceFile: "15_logistics_operations.sql",
+    sourceSQL: "-- Business question: Which couriers and destinations show different operational outcomes and shipping costs?\n-- Grain: one row per courier, province, or courier × province group.\n-- Relevant tables: orders.\n-- Return rate denominator: all orders in the selected group; cancellation rate is also shown separately.\n-- Delivery duration/SLA is not calculated because no delivery timestamp exists.\n\nSELECT\n    courier,\n    COUNT(*) AS orders,\n    COUNT(*) FILTER (WHERE order_status = 'returned') AS returned_orders,\n    COUNT(*) FILTER (WHERE order_status = 'cancelled') AS cancelled_orders,\n    ROUND(100.0 * COUNT(*) FILTER (WHERE order_status = 'returned') / NULLIF(COUNT(*), 0), 2) AS return_rate_pct,\n    ROUND(100.0 * COUNT(*) FILTER (WHERE order_status = 'cancelled') / NULLIF(COUNT(*), 0), 2) AS cancellation_rate_pct,\n    ROUND(AVG(shipping_cost_idr), 2) AS avg_shipping_cost_idr\nFROM orders\nGROUP BY courier\nORDER BY return_rate_pct DESC, orders DESC;\n\nSELECT\n    shipping_province,\n    COUNT(*) AS orders,\n    COUNT(*) FILTER (WHERE order_status = 'returned') AS returned_orders,\n    ROUND(100.0 * COUNT(*) FILTER (WHERE order_status = 'returned') / NULLIF(COUNT(*), 0), 2) AS return_rate_pct,\n    ROUND(AVG(shipping_cost_idr), 2) AS avg_shipping_cost_idr\nFROM orders\nGROUP BY shipping_province\nHAVING COUNT(*) >= 20\nORDER BY return_rate_pct DESC, orders DESC;\n\nSELECT\n    courier,\n    shipping_province,\n    COUNT(*) AS orders,\n    COUNT(*) FILTER (WHERE order_status = 'returned') AS returned_orders,\n    ROUND(100.0 * COUNT(*) FILTER (WHERE order_status = 'returned') / NULLIF(COUNT(*), 0), 2) AS return_rate_pct\nFROM orders\nGROUP BY courier, shipping_province\nHAVING COUNT(*) >= 10\nORDER BY return_rate_pct DESC, orders DESC;",
+    subs: [
+      {
+        id: "ex-15-s1", title: "Courier Performance (Return, Cancellation, Shipping Cost)",
+        question: "Show per-courier: total orders, returned orders, cancelled orders, return rate %, cancellation rate %, and average shipping cost.",
+        requirements: ["GROUP BY courier (all orders, not just valid)","COUNT(*) FILTER (WHERE status='returned') and ('cancelled')","Return rate: returned/total × 100, 2 dp","Cancellation rate: cancelled/total × 100, 2 dp","AVG(shipping_cost_idr), 2 dp","Order by return_rate_pct DESC, orders DESC"],
+        expectedOutput: { columns: ["courier","orders","returned_orders","cancelled_orders","return_rate_pct","cancellation_rate_pct","avg_shipping_cost_idr"], columnNotes: ["Courier name","Total orders","Returned count","Cancelled count","Return %, 2 dp","Cancellation %, 2 dp","Avg shipping cost, 2 dp"], grain: "One row per courier", sortOrder: "return_rate_pct DESC, orders DESC" },
+        metricDefs: "Denominator = ALL orders with that courier (not just valid). Return rate: returned / total. No delivery duration (no timestamp in dataset)."
+      },
+      {
+        id: "ex-15-s2", title: "Province Performance (Min 20 Orders)",
+        question: "Show per-shipping-province return rate and average shipping cost, with a minimum volume threshold of 20 orders for reliability.",
+        requirements: ["GROUP BY shipping_province","HAVING COUNT(*) >= 20","Show: orders, returned, return_rate_pct, avg_shipping_cost_idr","Order by return_rate_pct DESC, orders DESC"],
+        expectedOutput: { columns: ["shipping_province","orders","returned_orders","return_rate_pct","avg_shipping_cost_idr"], columnNotes: ["Province","Orders shipped to province","Returned count","Return %, 2 dp","Avg shipping cost, 2 dp"], grain: "One row per province with ≥20 orders", sortOrder: "return_rate_pct DESC, orders DESC" },
+        metricDefs: "HAVING ≥20 ensures statistical reliability. Return rate denominator = all orders to that province."
+      },
+      {
+        id: "ex-15-s3", title: "Courier × Province Return Rate (Min 10 Orders)",
+        question: "Show return rates for courier × province combinations with at least 10 orders, to identify specific operational risk areas.",
+        requirements: ["GROUP BY courier, shipping_province","HAVING COUNT(*) >= 10","Show: orders, returned, return_rate_pct","Order by return_rate_pct DESC, orders DESC"],
+        expectedOutput: { columns: ["courier","shipping_province","orders","returned_orders","return_rate_pct"], columnNotes: ["Courier","Province","Orders in combination","Returned count","Return %, 2 dp"], grain: "One row per courier×province with ≥10 orders", sortOrder: "return_rate_pct DESC, orders DESC" },
+        metricDefs: "Minimum 10 orders per combination for reliability. This identifies specific courier-province pairs with elevated return rates."
+      }
+    ]
+  },
+  {
+    id: "ex-16",
+    category: "Reviews and Customer Experience",
+    title: "Reviews and Customer Experience Overview",
+    difficulty: "Beginner",
+    concepts: ["GROUP BY","SUM (window)","COUNT (DISTINCT)","FILTER","HAVING","JOIN","LIMIT"],
+    businessContext: "Customer reviews are a direct signal of product quality and satisfaction. Missing review_text means no text available — it does not indicate negative sentiment.",
+    sourceFile: "16_reviews_customer_experience.sql",
+    sourceSQL: "-- Business question: What does the review dataset show about rating, helpfulness, text availability, and product experience?\n-- Grain: review-level for distribution/helpfulness; product-level for product experience.\n-- Relevant tables: reviews, products, orders.\n-- Missing review_text is treated as missing text, not as negative sentiment.\n\nSELECT\n    rating,\n    COUNT(*) AS review_count,\n    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2) AS review_share_pct\nFROM reviews\nGROUP BY rating\nORDER BY rating;\n\nSELECT\n    COUNT(*) AS total_reviews,\n    COUNT(*) FILTER (WHERE review_text IS NULL) AS missing_review_text,\n    ROUND(100.0 * COUNT(*) FILTER (WHERE review_text IS NULL) / NULLIF(COUNT(*), 0), 2) AS missing_text_pct,\n    COUNT(DISTINCT product_id) AS reviewed_products,\n    COUNT(DISTINCT customer_id) AS reviewing_customers\nFROM reviews;\n\nSELECT\n    review_id,\n    product_id,\n    rating,\n    helpful_count,\n    review_date,\n    review_text\nFROM reviews\nORDER BY helpful_count DESC, review_date DESC\nLIMIT 20;\n\nSELECT\n    p.product_id,\n    p.name,\n    p.category,\n    COUNT(r.review_id) AS review_count,\n    ROUND(AVG(r.rating), 2) AS avg_review_rating,\n    SUM(r.helpful_count) AS helpful_votes\nFROM products p\nJOIN reviews r ON r.product_id = p.product_id\nGROUP BY p.product_id, p.name, p.category\nHAVING COUNT(r.review_id) >= 5\nORDER BY avg_review_rating ASC, review_count DESC;",
+    subs: [
+      {
+        id: "ex-16-s1", title: "Rating Distribution (1-5)",
+        question: "Show the distribution of review ratings from 1 to 5 with count and percentage share of total reviews.",
+        requirements: ["GROUP BY rating","Use SUM(COUNT(*)) OVER () for total in denominator","Calculate share %, 2 dp","Order by rating ASC"],
+        expectedOutput: { columns: ["rating","review_count","review_share_pct"], columnNotes: ["Rating (1-5)","Review count","% of total, 2 dp"], grain: "One row per rating value (5 rows)", sortOrder: "rating ASC" },
+        metricDefs: "All reviews included (no status filter on reviews table). Share denominator = total review count via window function."
+      },
+      {
+        id: "ex-16-s2", title: "Review Summary Statistics",
+        question: "Report total reviews, count of missing review_text, missing text percentage, number of distinct products reviewed, and number of distinct customers who reviewed.",
+        requirements: ["Single aggregate query on reviews table","COUNT(*) FILTER (WHERE review_text IS NULL) for missing text","Missing text %, 2 dp","COUNT(DISTINCT product_id) and COUNT(DISTINCT customer_id)"],
+        expectedOutput: { columns: ["total_reviews","missing_review_text","missing_text_pct","reviewed_products","reviewing_customers"], columnNotes: ["Total reviews","Count where text IS NULL","% missing, 2 dp","Distinct products","Distinct customers"], grain: "Single aggregate row", sortOrder: "N/A" },
+        metricDefs: "Missing text ≠ negative review. It simply means no written text was provided. The rating is still present."
+      },
+      {
+        id: "ex-16-s3", title: "Top 20 Most Helpful Reviews",
+        question: "Show the 20 reviews with the highest helpful_count, including review text, to identify the most impactful customer feedback.",
+        requirements: ["SELECT specific columns (review_id, product_id, rating, helpful_count, review_date, review_text)","ORDER BY helpful_count DESC, review_date DESC","LIMIT 20"],
+        expectedOutput: { columns: ["review_id","product_id","rating","helpful_count","review_date","review_text"], columnNotes: ["Review ID","Product ID","Rating (1-5)","Helpful votes","Date","Text (may be NULL)"], grain: "One row per review (top 20)", sortOrder: "helpful_count DESC, review_date DESC, LIMIT 20" },
+        metricDefs: "Helpful_count is a community-vote metric. Higher = more customers found the review useful. Text may be NULL for some reviews."
+      },
+      {
+        id: "ex-16-s4", title: "Low-Rated Products with Sufficient Reviews",
+        question: "Identify products with at least 5 reviews, sorted by lowest average rating first, to flag products needing quality attention.",
+        requirements: ["JOIN products to reviews","GROUP BY product","HAVING COUNT(review_id) >= 5","Calculate: review_count, ROUND(AVG(rating),2), SUM(helpful_count)","Order by avg_review_rating ASC, review_count DESC"],
+        expectedOutput: { columns: ["product_id","name","category","review_count","avg_review_rating","helpful_votes"], columnNotes: ["Product ID","Product name","Category","Review count","Avg rating, 2 dp","Total helpful votes"], grain: "One row per product with ≥5 reviews", sortOrder: "avg_review_rating ASC, review_count DESC" },
+        metricDefs: "Minimum 5 reviews ensures the average is meaningful. Lowest rating first = products needing quality improvement. This is a priority list, not a final judgment."
+      }
+    ]
+  },
+  {
+    id: "ex-17",
+    category: "Reviews and Customer Experience",
+    title: "Rating vs Sales Gap Analysis",
+    difficulty: "Advanced",
+    concepts: ["Multiple CTEs","LEFT JOIN","RANK","CASE (signal)","COALESCE","NULLS LAST"],
+    businessContext: "A product with high ratings but low sales might be under-marketed. A product with strong sales but lower ratings may need quality improvement. Rating correlation does not establish causation.",
+    sourceFile: "17_rating_vs_sales.sql",
+    sourceSQL: "-- Business question: Are highly rated products also selling strongly, and which products have rating/sales gaps?\n-- Grain: one row per product.\n-- Relevant tables: products, reviews, orders, order_items.\n-- Sales exclude cancelled and returned orders.\n-- Rating is descriptive; correlation does not establish causation.\n\nWITH sales AS (\n    SELECT\n        oi.product_id,\n        SUM(oi.quantity) AS units_sold,\n        SUM(oi.subtotal_idr) AS revenue_idr\n    FROM order_items oi\n    JOIN orders o ON o.order_id = oi.order_id\n    WHERE o.order_status NOT IN ('cancelled', 'returned')\n    GROUP BY oi.product_id\n),\nreview_stats AS (\n    SELECT\n        product_id,\n        COUNT(*) AS review_count,\n        AVG(rating) AS avg_review_rating\n    FROM reviews\n    GROUP BY product_id\n),\nproduct_metrics AS (\n    SELECT\n        p.product_id,\n        p.name,\n        p.category,\n        COALESCE(s.units_sold, 0) AS units_sold,\n        COALESCE(s.revenue_idr, 0) AS revenue_idr,\n        rs.review_count,\n        rs.avg_review_rating\n    FROM products p\n    LEFT JOIN sales s ON s.product_id = p.product_id\n    LEFT JOIN review_stats rs ON rs.product_id = p.product_id\n)\nSELECT\n    *,\n    RANK() OVER (ORDER BY units_sold DESC) AS sales_rank,\n    RANK() OVER (ORDER BY avg_review_rating DESC NULLS LAST) AS rating_rank,\n    CASE\n        WHEN avg_review_rating >= 4.5 AND units_sold <= 5 THEN 'High rating + low sales'\n        WHEN avg_review_rating < 3.5 AND units_sold >= 20 THEN 'Lower rating + high sales'\n        ELSE 'Other'\n    END AS experience_signal\nFROM product_metrics\nWHERE review_count IS NOT NULL\nORDER BY\n    CASE WHEN experience_signal <> 'Other' THEN 0 ELSE 1 END,\n    avg_review_rating DESC NULLS LAST,\n    units_sold DESC;",
+    subs: [
+      {
+        id: "ex-17-s1", title: "Product Rating/Sales Gap Identification",
+        question: "For products that have reviews, compute sales and review metrics, rank by both dimensions, and flag notable gaps: high rating with low sales, or lower rating with high sales.",
+        requirements: ["Sales CTE: valid order_items aggregated per product","Review CTE: COUNT and AVG rating per product","LEFT JOIN both to products (COALESCE for no-sales products)","Filter: review_count IS NOT NULL (only reviewed products)","RANK by units_sold DESC and avg_review_rating DESC NULLS LAST","Flags: rating≥4.5+units≤5→'High rating + low sales'; rating<3.5+units≥20→'Lower rating + high sales'","Order: flagged first, then rating DESC NULLS LAST, units DESC"],
+        expectedOutput: { columns: ["product_id","name","category","units_sold","revenue_idr","review_count","avg_review_rating","sales_rank","rating_rank","experience_signal"], columnNotes: ["Product ID","Name","Category","Units (valid)","Revenue (valid)","Review count","Avg rating","Sales rank","Rating rank","Signal flag"], grain: "One row per reviewed product", sortOrder: "Flagged first, then rating DESC NULLS LAST, units DESC" },
+        metricDefs: "Descriptive only. High rating=≥4.5, low rating=<3.5; high sales=units≥20, low sales=units≤5. Correlation ≠ causation. NULLS LAST ensures unrated products don't disrupt ranking."
+      }
+    ]
+  },
+  {
+    id: "ex-18",
+    category: "Advanced SQL Analytics",
+    title: "Product Pair (Co-occurrence) Analysis",
+    difficulty: "Advanced",
+    concepts: ["Self-join","DISTINCT","CTE","RANK","LIMIT","cross-product logic"],
+    businessContext: "Identifying which products are frequently bought together can inform bundling strategies or 'frequently bought together' recommendations. This is co-occurrence, not causal cross-selling evidence.",
+    sourceFile: "18_item_pair_analysis.sql",
+    sourceSQL: "-- Business question: Which product pairs appear together in the same order?\n-- Grain: one unordered product pair per order, then aggregated across orders.\n-- Relevant tables: order_items, orders, products.\n-- Valid orders exclude cancelled and returned.\n-- Pair frequency is co-occurrence, not causal cross-selling evidence.\n\nWITH valid_order_products AS (\n    SELECT DISTINCT\n        oi.order_id,\n        oi.product_id\n    FROM order_items oi\n    JOIN orders o ON o.order_id = oi.order_id\n    WHERE o.order_status NOT IN ('cancelled', 'returned')\n),\npairs AS (\n    SELECT\n        a.product_id AS product_a,\n        b.product_id AS product_b,\n        COUNT(*) AS order_pair_count\n    FROM valid_order_products a\n    JOIN valid_order_products b\n      ON a.order_id = b.order_id\n     AND a.product_id < b.product_id\n    GROUP BY a.product_id, b.product_id\n)\nSELECT\n    p1.name AS product_a,\n    p2.name AS product_b,\n    pairs.order_pair_count,\n    RANK() OVER (ORDER BY pairs.order_pair_count DESC) AS pair_rank\nFROM pairs\nJOIN products p1 ON p1.product_id = pairs.product_a\nJOIN products p2 ON p2.product_id = pairs.product_b\nORDER BY pair_rank, product_a, product_b\nLIMIT 30;",
+    subs: [
+      {
+        id: "ex-18-s1", title: "Top 30 Product Pairs by Co-occurrence",
+        question: "Find the top 30 unordered product pairs that appear together in the same valid order, using a self-join with product_a < product_b to avoid duplicates.",
+        requirements: ["DISTINCT (order_id, product_id) from valid order_items","Self-join on same order_id WHERE product_a < product_b","COUNT per pair (order_pair_count)","Join to products for both names","RANK by pair_count DESC","LIMIT 30","Order by pair_rank, product_a, product_b"],
+        expectedOutput: { columns: ["product_a","product_b","order_pair_count","pair_rank"], columnNotes: ["First product name (lower ID)","Second product name (higher ID)","Orders containing both","Rank by count DESC (ties share)"], grain: "One row per unordered pair (top 30)", sortOrder: "pair_rank ASC, product_a ASC, product_b ASC, LIMIT 30" },
+        metricDefs: "Co-occurrence: both products in same valid order. Unordered: (A,B)=(B,A), enforced by a<b. Descriptive frequency, not causal evidence."
+      }
+    ]
+  },
+  {
+    id: "ex-19",
+    category: "Advanced SQL Analytics",
+    title: "Customer Segment × Category Matrix",
+    difficulty: "Advanced",
+    concepts: ["WINDOW (PARTITION BY)","CTE (multiple)","JOIN (multi-table)","CASE (segment)","RANK (PARTITION BY)"],
+    businessContext: "Understanding which product categories resonate with different customer segments enables targeted marketing and assortment planning. Segment thresholds are analytical choices.",
+    sourceFile: "19_customer_category_matrix.sql",
+    sourceSQL: "-- Business question: Which customer segments × product categories show the strongest observed revenue and unit combinations?\n-- Grain: customer segment × normalized product category.\n-- Relevant tables: customers, orders, order_items, products.\n-- Valid orders exclude cancelled and returned.\n-- Segment thresholds are analytical choices; category normalization retains the raw source separately.\n\nWITH customer_orders AS (\n    SELECT\n        o.order_id,\n        o.customer_id,\n        COUNT(*) OVER (PARTITION BY o.customer_id) AS customer_order_count,\n        SUM(o.total_amount_idr) OVER (PARTITION BY o.customer_id) AS customer_revenue\n    FROM orders o\n    WHERE o.order_status NOT IN ('cancelled', 'returned')\n),\ncustomer_segment AS (\n    SELECT DISTINCT\n        customer_id,\n        CASE\n            WHEN customer_order_count >= 5 AND customer_revenue >= 5000000 THEN 'High-value repeat'\n            WHEN customer_order_count >= 2 THEN 'Repeat'\n            ELSE 'One-time'\n        END AS customer_segment\n    FROM customer_orders\n),\nproduct_clean AS (\n    SELECT\n        product_id,\n        CASE\n            WHEN LOWER(TRIM(category)) = 'dress' THEN 'Dress'\n            WHEN LOWER(TRIM(category)) IN ('jacket', 'jaket') THEN 'Jaket'\n            WHEN LOWER(TRIM(category)) = 'kaos' THEN 'Kaos'\n            WHEN LOWER(TRIM(category)) = 'kemeja' THEN 'Kemeja'\n            WHEN LOWER(TRIM(category)) = 't-shirt' THEN 'T-Shirt'\n            ELSE TRIM(category)\n        END AS category_normalized\n    FROM products\n)\nSELECT\n    cs.customer_segment,\n    pc.category_normalized,\n    COUNT(DISTINCT co.customer_id) AS customers,\n    SUM(oi.quantity) AS units_sold,\n    SUM(oi.subtotal_idr) AS item_revenue_idr,\n    RANK() OVER (\n        PARTITION BY cs.customer_segment\n        ORDER BY SUM(oi.subtotal_idr) DESC\n    ) AS category_rank_within_segment\nFROM customer_orders co\nJOIN customer_segment cs ON cs.customer_id = co.customer_id\nJOIN order_items oi ON oi.order_id = co.order_id\nJOIN product_clean pc ON pc.product_id = oi.product_id\nGROUP BY cs.customer_segment, pc.category_normalized\nORDER BY cs.customer_segment, category_rank_within_segment;",
+    subs: [
+      {
+        id: "ex-19-s1", title: "Segment × Category Cross-Tabulation",
+        question: "Build a matrix of customer segments (High-value repeat, Repeat, One-time) × normalized product categories, showing customers, units, revenue, and within-segment category ranking.",
+        requirements: ["Window functions per customer: order_count and revenue over valid orders","Segment: count≥5+revenue≥5000000→'High-value repeat'; count≥2→'Repeat'; else→'One-time'","Normalize categories (same mapping as ex-07)","Join path: customer_orders → customer_segment → order_items → product_clean","GROUP BY segment, category_normalized","RANK() OVER (PARTITION BY segment ORDER BY revenue DESC)","Order by segment, category_rank_within_segment"],
+        expectedOutput: { columns: ["customer_segment","category_normalized","customers","units_sold","item_revenue_idr","category_rank_within_segment"], columnNotes: ["Segment label","Normalized category","Distinct customers in this cell","Units sold","Item revenue","Rank within segment by revenue"], grain: "One row per (segment, category)", sortOrder: "customer_segment ASC, category_rank_within_segment ASC" },
+        metricDefs: "Segment thresholds: High-value repeat=5+ orders & 5M+ IDR; Repeat=2+; One-time=1. Category normalization standard. Item revenue: SUM(subtotal_idr) valid orders."
+      }
+    ]
+  },
+  {
+    id: "ex-20",
+    category: "Executive Business Insights",
+    title: "Executive Opportunity Summary",
+    difficulty: "Advanced",
+    concepts: ["Multiple CTEs","LEFT JOIN","CASE","HAVING","ORDER BY (multi-criteria)","business synthesis"],
+    businessContext: "The capstone exercise synthesizing findings into actionable signals for management. Three evidence tables: restock, dead-stock, and logistics risk. Narrative recommendations only after reviewing executed results.",
+    sourceFile: "20_executive_opportunity_summary.sql",
+    sourceSQL: "-- Business question: What data-backed product, customer, and operational signals should management prioritize?\n-- Grain: separate ranked result sets by opportunity type.\n-- Relevant tables: products/order_items/orders/reviews and orders.\n-- This file produces evidence tables; narrative recommendations should be written only after reviewing executed results.\n\n-- 1) Restock signal: products with sales and zero/low current stock.\nWITH sales AS (\n    SELECT oi.product_id, SUM(oi.quantity) AS units_sold\n    FROM order_items oi\n    JOIN orders o ON o.order_id = oi.order_id\n    WHERE o.order_status NOT IN ('cancelled', 'returned')\n    GROUP BY oi.product_id\n)\nSELECT\n    p.product_id,\n    p.name,\n    p.brand,\n    p.stock,\n    COALESCE(s.units_sold, 0) AS units_sold,\n    'RESTOCK_REVIEW' AS action_signal\nFROM products p\nLEFT JOIN sales s ON s.product_id = p.product_id\nWHERE COALESCE(s.units_sold, 0) > 0\n  AND p.stock <= 20\nORDER BY units_sold DESC, stock ASC;\n\n-- 2) Dead-stock review signal: current stock is high while recorded valid sales are low.\nWITH sales AS (\n    SELECT oi.product_id, SUM(oi.quantity) AS units_sold\n    FROM order_items oi\n    JOIN orders o ON o.order_id = oi.order_id\n    WHERE o.order_status NOT IN ('cancelled', 'returned')\n    GROUP BY oi.product_id\n)\nSELECT\n    p.product_id,\n    p.name,\n    p.brand,\n    p.stock,\n    COALESCE(s.units_sold, 0) AS units_sold,\n    'DEAD_STOCK_REVIEW' AS action_signal\nFROM products p\nLEFT JOIN sales s ON s.product_id = p.product_id\nWHERE p.stock >= 150\n  AND COALESCE(s.units_sold, 0) <= 5\nORDER BY stock DESC, units_sold ASC;\n\n-- 3) Logistics risk: courier × province combinations with enough observations and high return rate.\nSELECT\n    courier,\n    shipping_province,\n    COUNT(*) AS orders,\n    COUNT(*) FILTER (WHERE order_status = 'returned') AS returned_orders,\n    ROUND(100.0 * COUNT(*) FILTER (WHERE order_status = 'returned') / NULLIF(COUNT(*), 0), 2) AS return_rate_pct,\n    'LOGISTICS_REVIEW' AS action_signal\nFROM orders\nGROUP BY courier, shipping_province\nHAVING COUNT(*) >= 10\nORDER BY return_rate_pct DESC, orders DESC;",
+    subs: [
+      {
+        id: "ex-20-s1", title: "Restock Review Signal",
+        question: "Identify products with observed valid sales but zero or low current stock (≤20), ordered by demand (units DESC) then urgency (stock ASC).",
+        requirements: ["CTE: aggregate valid order_items to product level","LEFT JOIN products to sales","WHERE units_sold > 0 AND stock <= 20","Label as 'RESTOCK_REVIEW'","Order by units_sold DESC, stock ASC"],
+        expectedOutput: { columns: ["product_id","name","brand","stock","units_sold","action_signal"], columnNotes: ["Product ID","Name","Brand","Current stock (≤20)","Units sold (>0)","'RESTOCK_REVIEW'"], grain: "One row per qualifying product", sortOrder: "units_sold DESC, stock ASC" },
+        metricDefs: "Stock is a snapshot. High demand (units>0) + low stock (≤20) = restock priority. Higher units with lower stock = more urgent."
+      },
+      {
+        id: "ex-20-s2", title: "Dead Stock Review Signal",
+        question: "Identify products with high current stock (≥150) but low or no valid sales (≤5 units), indicating potential capital tied up.",
+        requirements: ["Same sales CTE","LEFT JOIN products","WHERE stock >= 150 AND units_sold <= 5","Label as 'DEAD_STOCK_REVIEW'","Order by stock DESC, units_sold ASC"],
+        expectedOutput: { columns: ["product_id","name","brand","stock","units_sold","action_signal"], columnNotes: ["Product ID","Name","Brand","Current stock (≥150)","Units sold (≤5)","'DEAD_STOCK_REVIEW'"], grain: "One row per qualifying product", sortOrder: "stock DESC, units_sold ASC" },
+        metricDefs: "High stock (≥150) + low sales (≤5) = dead stock risk. Higher stock with fewer sales = more capital at risk. Stock is a snapshot, not historical."
+      },
+      {
+        id: "ex-20-s3", title: "Logistics Risk Signal",
+        question: "Identify courier × province combinations with at least 10 orders and high return rates, flagging operational risk areas.",
+        requirements: ["GROUP BY courier, shipping_province","HAVING COUNT(*) >= 10","Calculate return_rate_pct (returned / total × 100, 2 dp)","Label as 'LOGISTICS_REVIEW'","Order by return_rate_pct DESC, orders DESC"],
+        expectedOutput: { columns: ["courier","shipping_province","orders","returned_orders","return_rate_pct","action_signal"], columnNotes: ["Courier","Province","Orders (≥10)","Returned count","Return %, 2 dp","'LOGISTICS_REVIEW'"], grain: "One row per qualifying combination", sortOrder: "return_rate_pct DESC, orders DESC" },
+        metricDefs: "Minimum 10 orders for reliability. Return rate uses ALL orders (not just valid). These are evidence tables for management review, not automated decisions."
+      }
+    ]
+  }
+];
+
+/* ============================================================
+   DATA SCHEMA (verified against gayanara_sql_project/schema.sql
+   and docs/gayanara_data_reference.md)
+   Only the tables and columns relevant to each sub-exercise are
+   shown. Types/keys are as documented; anything not verified is
+   omitted rather than guessed.
+   ============================================================ */
+const TABLE_SCHEMA = {
+  customers: [
+    "`customer_id` — TEXT, PRIMARY KEY (CUST0001–CUST0800)",
+    "`name` — TEXT (customer name)",
+    "`email` — TEXT (intentional duplicates present)",
+    "`phone` — TEXT (some missing values)",
+    "`city` — TEXT (customer city)",
+    "`province` — TEXT (customer province)",
+    "`registration_date` — DATE",
+    "`gender` — TEXT (Male/Female)",
+    "`age_group` — TEXT (18-24, 25-34, 35-44, 45+)"
+  ],
+  products: [
+    "`product_id` — TEXT, PRIMARY KEY (PRD001–PRD300)",
+    "`name` — TEXT (product name)",
+    "`category` — TEXT (inconsistent/dirty: e.g. Dress/dress, Jacket/Jaket)",
+    "`sub_category` — TEXT",
+    "`price_idr` — INTEGER (current/listed price)",
+    "`stock` — INTEGER (current stock snapshot)",
+    "`brand` — TEXT (fictional Indonesian brand)",
+    "`material` — TEXT (some missing values)",
+    "`avg_rating` — NUMERIC(3,1)"
+  ],
+  orders: [
+    "`order_id` — TEXT, PRIMARY KEY",
+    "`customer_id` — TEXT NOT NULL, FOREIGN KEY → customers.customer_id",
+    "`order_date` — DATE (2022-01-01 to 2025-02-28)",
+    "`total_amount_idr` — INTEGER (order amount = item subtotal − discount)",
+    "`shipping_city` — TEXT (destination city)",
+    "`shipping_province` — TEXT (destination province)",
+    "`shipping_cost_idr` — INTEGER",
+    "`payment_method` — TEXT (Transfer Bank, GoPay, OVO, Kartu Kredit, QRIS)",
+    "`order_status` — TEXT (delivered, shipped, processing, cancelled, returned)",
+    "`promo_code` — TEXT (NULL when no promo)",
+    "`discount_amount_idr` — NUMERIC (NULL when no promo)",
+    "`courier` — TEXT (JNE, J&T, SiCepat, Anteraja, Pos Indonesia)"
+  ],
+  order_items: [
+    "`item_id` — TEXT, PRIMARY KEY",
+    "`order_id` — TEXT NOT NULL, FOREIGN KEY → orders.order_id (one order → many items)",
+    "`product_id` — TEXT NOT NULL, FOREIGN KEY → products.product_id",
+    "`quantity` — INTEGER (units in line item)",
+    "`unit_price_idr` — INTEGER (price at order time; may differ from current price)",
+    "`subtotal_idr` — INTEGER (quantity × unit_price_idr)"
+  ],
+  reviews: [
+    "`review_id` — TEXT, PRIMARY KEY",
+    "`order_id` — TEXT NOT NULL, FOREIGN KEY → orders.order_id (one order → many reviews)",
+    "`product_id` — TEXT NOT NULL, FOREIGN KEY → products.product_id",
+    "`customer_id` — TEXT NOT NULL, FOREIGN KEY → customers.customer_id",
+    "`rating` — INTEGER (1–5)",
+    "`review_text` — TEXT (some missing values)",
+    "`review_date` — DATE (1–10 days after order)",
+    "`helpful_count` — INTEGER"
+  ]
+};
+
+// Which tables each sub-exercise needs (derived from its actual SQL logic).
+const SUB_SCHEMA = {
+  "ex-01-s1": ["customers","products","orders","order_items","reviews"],
+  "ex-01-s2": ["customers"],
+  "ex-01-s3": ["products"],
+  "ex-02-s1": ["customers","products","orders","order_items","reviews"],
+  "ex-02-s2": ["order_items"],
+  "ex-02-s3": ["orders","order_items"],
+  "ex-02-s4": ["reviews","orders"],
+  "ex-03-s1": ["orders"],
+  "ex-03-s2": ["orders","order_items"],
+  "ex-04-s1": ["orders","order_items"],
+  "ex-05-s1": ["orders"],
+  "ex-05-s2": ["orders"],
+  "ex-05-s3": ["orders"],
+  "ex-05-s4": ["orders"],
+  "ex-06-s1": ["orders","order_items","products"],
+  "ex-07-s1": ["products","order_items","orders"],
+  "ex-07-s2": ["products","order_items","orders"],
+  "ex-08-s1": ["products","order_items","orders"],
+  "ex-09-s1": ["products","order_items","orders"],
+  "ex-09-s2": ["products","order_items"],
+  "ex-10-s1": ["customers","orders"],
+  "ex-10-s2": ["orders"],
+  "ex-11-s1": ["orders"],
+  "ex-12-s1": ["orders"],
+  "ex-13-s1": ["orders"],
+  "ex-13-s2": ["orders"],
+  "ex-14-s1": ["orders","order_items","products"],
+  "ex-14-s2": ["orders","order_items","products"],
+  "ex-15-s1": ["orders"],
+  "ex-15-s2": ["orders"],
+  "ex-15-s3": ["orders"],
+  "ex-16-s1": ["reviews"],
+  "ex-16-s2": ["reviews"],
+  "ex-16-s3": ["reviews"],
+  "ex-16-s4": ["products","reviews"],
+  "ex-17-s1": ["products","order_items","orders","reviews"],
+  "ex-18-s1": ["order_items","orders","products"],
+  "ex-19-s1": ["orders","order_items","products"],
+  "ex-20-s1": ["products","order_items","orders"],
+  "ex-20-s2": ["products","order_items","orders"],
+  "ex-20-s3": ["orders"]
+};
+
+function renderSchemaHtml(subId) {
+  const tables = SUB_SCHEMA[subId];
+  if (!tables || tables.length === 0) return "";
+  const parts = [];
+  for (const t of tables) {
+    const cols = TABLE_SCHEMA[t];
+    if (!cols) continue;
+    parts.push("Table: " + t);
+    for (const c of cols) parts.push("  " + c);
+    parts.push("");
+  }
+  // Trim trailing blank line
+  while (parts.length && parts[parts.length - 1] === "") parts.pop();
+  return parts.map(line => "<div>" + (line === "" ? "&nbsp;" : esc(line)) + "</div>").join("");
+}
+
+/* ============================================================
+   REFERENCE SQL (one query per sub-exercise, embedded for
+   file:// compatibility. Same content as reference_queries.json)
+   ============================================================ */
+const REF_SQL = {
+"ex-01-s1":"SELECT 'customers' AS table_name, COUNT(*) AS row_count, COUNT(*) FILTER (WHERE customer_id IS NULL) AS null_customer_id, COUNT(*) FILTER (WHERE email IS NULL) AS null_email, COUNT(*) FILTER (WHERE phone IS NULL) AS null_phone FROM customers UNION ALL SELECT 'products', COUNT(*), COUNT(*) FILTER (WHERE product_id IS NULL), COUNT(*) FILTER (WHERE name IS NULL), COUNT(*) FILTER (WHERE material IS NULL) FROM products UNION ALL SELECT 'orders', COUNT(*), COUNT(*) FILTER (WHERE order_id IS NULL), COUNT(*) FILTER (WHERE customer_id IS NULL), COUNT(*) FILTER (WHERE promo_code IS NULL) FROM orders UNION ALL SELECT 'order_items', COUNT(*), COUNT(*) FILTER (WHERE item_id IS NULL), COUNT(*) FILTER (WHERE order_id IS NULL), COUNT(*) FILTER (WHERE product_id IS NULL) FROM order_items UNION ALL SELECT 'reviews', COUNT(*), COUNT(*) FILTER (WHERE review_id IS NULL), COUNT(*) FILTER (WHERE order_id IS NULL), COUNT(*) FILTER (WHERE review_text IS NULL) FROM reviews;",
+"ex-01-s2":"SELECT LOWER(TRIM(email)) AS email_normalized, COUNT(*) AS customer_count FROM customers WHERE email IS NOT NULL GROUP BY LOWER(TRIM(email)) HAVING COUNT(*) > 1 ORDER BY customer_count DESC, email_normalized;",
+"ex-01-s3":"SELECT category, COUNT(*) AS product_count FROM products GROUP BY category ORDER BY product_count DESC, category;",
+"ex-02-s1":"SELECT (SELECT COUNT(*) FROM orders o LEFT JOIN customers c ON c.customer_id = o.customer_id WHERE c.customer_id IS NULL) AS orphan_orders, (SELECT COUNT(*) FROM order_items oi LEFT JOIN orders o ON o.order_id = oi.order_id WHERE o.order_id IS NULL) AS orphan_order_items, (SELECT COUNT(*) FROM order_items oi LEFT JOIN products p ON p.product_id = oi.product_id WHERE p.product_id IS NULL) AS orphan_products, (SELECT COUNT(*) FROM reviews r LEFT JOIN orders o ON o.order_id = r.order_id WHERE o.order_id IS NULL) AS orphan_reviews, (SELECT COUNT(*) FROM reviews r LEFT JOIN products p ON p.product_id = r.product_id WHERE p.product_id IS NULL) AS orphan_review_products, (SELECT COUNT(*) FROM reviews r LEFT JOIN customers c ON c.customer_id = r.customer_id WHERE c.customer_id IS NULL) AS orphan_review_customers;",
+"ex-02-s2":"SELECT COUNT(*) AS item_arithmetic_mismatches FROM order_items WHERE subtotal_idr <> quantity * unit_price_idr;",
+"ex-02-s3":"WITH item_totals AS (SELECT order_id, SUM(subtotal_idr) AS item_subtotal_idr FROM order_items GROUP BY order_id) SELECT COUNT(*) AS orders_checked, COUNT(*) FILTER (WHERE o.total_amount_idr <> it.item_subtotal_idr - COALESCE(o.discount_amount_idr, 0)) AS order_amount_mismatches, ROUND(100.0 * COUNT(*) FILTER (WHERE o.total_amount_idr <> it.item_subtotal_idr - COALESCE(o.discount_amount_idr, 0)) / NULLIF(COUNT(*), 0), 2) AS mismatch_rate_pct FROM orders o JOIN item_totals it ON it.order_id = o.order_id;",
+"ex-02-s4":"SELECT COUNT(*) AS reviews_not_on_delivered_orders FROM reviews r JOIN orders o ON o.order_id = r.order_id WHERE o.order_status <> 'delivered';",
+"ex-03-s1":"SELECT COUNT(*) AS valid_orders, COALESCE(SUM(total_amount_idr), 0) AS valid_revenue_idr, ROUND(COALESCE(SUM(total_amount_idr), 0)::NUMERIC / NULLIF(COUNT(*), 0), 2) AS aov_idr FROM orders WHERE order_status NOT IN ('cancelled', 'returned');",
+"ex-03-s2":"WITH valid_order_units AS (SELECT o.order_id, SUM(oi.quantity) AS units_sold FROM orders o JOIN order_items oi ON oi.order_id = o.order_id WHERE o.order_status NOT IN ('cancelled', 'returned') GROUP BY o.order_id) SELECT COUNT(*) AS valid_orders_with_items, COALESCE(SUM(units_sold), 0) AS units_sold, ROUND(AVG(units_sold), 2) AS avg_units_per_order FROM valid_order_units;",
+"ex-04-s1":"WITH monthly_orders AS (SELECT DATE_TRUNC('month', o.order_date)::DATE AS month, COUNT(*) AS orders, SUM(o.total_amount_idr) AS revenue_idr, AVG(o.total_amount_idr) AS aov_idr FROM orders o WHERE o.order_status NOT IN ('cancelled', 'returned') GROUP BY 1), monthly_units AS (SELECT DATE_TRUNC('month', o.order_date)::DATE AS month, SUM(oi.quantity) AS units_sold FROM orders o JOIN order_items oi ON oi.order_id = o.order_id WHERE o.order_status NOT IN ('cancelled', 'returned') GROUP BY 1), combined AS (SELECT mo.*, mu.units_sold FROM monthly_orders mo JOIN monthly_units mu USING (month)) SELECT month, orders, revenue_idr, units_sold, ROUND(aov_idr, 2) AS aov_idr, LAG(revenue_idr) OVER (ORDER BY month) AS prev_month_revenue_idr, ROUND(100.0 * (revenue_idr - LAG(revenue_idr) OVER (ORDER BY month)) / NULLIF(LAG(revenue_idr) OVER (ORDER BY month), 0), 2) AS revenue_mom_pct, ROUND(100.0 * (orders - LAG(orders) OVER (ORDER BY month)) / NULLIF(LAG(orders) OVER (ORDER BY month), 0), 2) AS orders_mom_pct FROM combined ORDER BY month;",
+"ex-05-s1":"WITH valid_orders AS (SELECT * FROM orders WHERE order_status NOT IN ('cancelled', 'returned')), total AS (SELECT SUM(total_amount_idr) AS total_revenue_idr FROM valid_orders) SELECT shipping_province, COUNT(*) AS valid_orders, SUM(total_amount_idr) AS revenue_idr, ROUND(100.0 * SUM(total_amount_idr) / NULLIF(MAX(total.total_revenue_idr), 0), 2) AS revenue_contribution_pct FROM valid_orders CROSS JOIN total GROUP BY shipping_province ORDER BY revenue_idr DESC;",
+"ex-05-s2":"SELECT shipping_city, shipping_province, COUNT(*) AS valid_orders, SUM(total_amount_idr) AS revenue_idr FROM orders WHERE order_status NOT IN ('cancelled', 'returned') GROUP BY shipping_city, shipping_province ORDER BY revenue_idr DESC LIMIT 20;",
+"ex-05-s3":"SELECT payment_method, COUNT(*) AS valid_orders, SUM(total_amount_idr) AS revenue_idr, ROUND(AVG(total_amount_idr), 2) AS aov_idr FROM orders WHERE order_status NOT IN ('cancelled', 'returned') GROUP BY payment_method ORDER BY revenue_idr DESC;",
+"ex-05-s4":"SELECT order_status, COUNT(*) AS orders, ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2) AS order_share_pct FROM orders GROUP BY order_status ORDER BY orders DESC;",
+"ex-06-s1":"WITH product_sales AS (SELECT oi.product_id, SUM(oi.quantity) AS units_sold, SUM(oi.subtotal_idr) AS product_revenue_idr, COUNT(DISTINCT oi.order_id) AS order_count FROM order_items oi JOIN orders o ON o.order_id = oi.order_id WHERE o.order_status NOT IN ('cancelled', 'returned') GROUP BY oi.product_id), ranked AS (SELECT p.product_id, p.name, p.category, p.brand, ps.units_sold, ps.product_revenue_idr, ps.order_count, RANK() OVER (ORDER BY ps.units_sold DESC) AS unit_rank, RANK() OVER (ORDER BY ps.product_revenue_idr DESC) AS revenue_rank FROM product_sales ps JOIN products p ON p.product_id = ps.product_id) SELECT * FROM ranked WHERE unit_rank <= 10 OR revenue_rank <= 10 ORDER BY revenue_rank, unit_rank, product_id;",
+"ex-07-s1":"WITH product_clean AS (SELECT product_id, brand, sub_category, CASE WHEN LOWER(TRIM(category)) = 'dress' THEN 'Dress' WHEN LOWER(TRIM(category)) IN ('jacket', 'jaket') THEN 'Jaket' WHEN LOWER(TRIM(category)) = 'kaos' THEN 'Kaos' WHEN LOWER(TRIM(category)) = 'kemeja' THEN 'Kemeja' WHEN LOWER(TRIM(category)) = 't-shirt' THEN 'T-Shirt' ELSE TRIM(category) END AS category_normalized FROM products), sales AS (SELECT pc.category_normalized, pc.sub_category, pc.brand, SUM(oi.quantity) AS units_sold, SUM(oi.subtotal_idr) AS revenue_idr, COUNT(DISTINCT oi.order_id) AS order_count FROM order_items oi JOIN orders o ON o.order_id = oi.order_id JOIN product_clean pc ON pc.product_id = oi.product_id WHERE o.order_status NOT IN ('cancelled', 'returned') GROUP BY pc.category_normalized, pc.sub_category, pc.brand) SELECT * FROM sales ORDER BY revenue_idr DESC;",
+"ex-07-s2":"WITH product_clean AS (SELECT product_id, CASE WHEN LOWER(TRIM(category)) = 'dress' THEN 'Dress' WHEN LOWER(TRIM(category)) IN ('jacket', 'jaket') THEN 'Jaket' WHEN LOWER(TRIM(category)) = 'kaos' THEN 'Kaos' WHEN LOWER(TRIM(category)) = 'kemeja' THEN 'Kemeja' WHEN LOWER(TRIM(category)) = 't-shirt' THEN 'T-Shirt' ELSE TRIM(category) END AS category_normalized FROM products), category_sales AS (SELECT pc.category_normalized, SUM(oi.quantity) AS units_sold, SUM(oi.subtotal_idr) AS revenue_idr FROM order_items oi JOIN orders o ON o.order_id = oi.order_id JOIN product_clean pc ON pc.product_id = oi.product_id WHERE o.order_status NOT IN ('cancelled', 'returned') GROUP BY pc.category_normalized) SELECT category_normalized, units_sold, revenue_idr, RANK() OVER (ORDER BY revenue_idr DESC) AS revenue_rank, ROUND(100.0 * revenue_idr / SUM(revenue_idr) OVER (), 2) AS revenue_contribution_pct FROM category_sales ORDER BY revenue_rank;",
+"ex-08-s1":"WITH product_sales AS (SELECT oi.product_id, SUM(oi.quantity) AS units_sold FROM order_items oi JOIN orders o ON o.order_id = oi.order_id WHERE o.order_status NOT IN ('cancelled', 'returned') GROUP BY oi.product_id), scored AS (SELECT p.product_id, p.name, p.category, p.brand, p.stock, COALESCE(ps.units_sold, 0) AS units_sold, CASE WHEN p.stock = 0 AND COALESCE(ps.units_sold, 0) > 0 THEN 'Out of stock + sold' WHEN p.stock <= 20 AND COALESCE(ps.units_sold, 0) > 0 THEN 'Low stock + sold' WHEN p.stock >= 150 AND COALESCE(ps.units_sold, 0) <= 5 THEN 'High stock + low/no sales' WHEN COALESCE(ps.units_sold, 0) = 0 THEN 'No recorded valid sales' ELSE 'Other' END AS opportunity_flag FROM products p LEFT JOIN product_sales ps ON ps.product_id = p.product_id) SELECT * FROM scored WHERE opportunity_flag <> 'Other' ORDER BY CASE opportunity_flag WHEN 'Out of stock + sold' THEN 1 WHEN 'Low stock + sold' THEN 2 WHEN 'High stock + low/no sales' THEN 3 WHEN 'No recorded valid sales' THEN 4 ELSE 5 END, units_sold DESC, stock DESC;",
+"ex-09-s1":"WITH product_sales AS (SELECT oi.product_id, SUM(oi.quantity) AS units_sold, SUM(oi.subtotal_idr) AS revenue_idr FROM order_items oi JOIN orders o ON o.order_id = oi.order_id WHERE o.order_status NOT IN ('cancelled', 'returned') GROUP BY oi.product_id) SELECT p.product_id, p.name, p.category, p.price_idr AS current_price_idr, p.avg_rating, COALESCE(ps.units_sold, 0) AS units_sold, COALESCE(ps.revenue_idr, 0) AS revenue_idr, CASE WHEN COALESCE(ps.units_sold, 0) >= 20 AND p.avg_rating >= 4.5 THEN 'High sales + high rating' WHEN COALESCE(ps.units_sold, 0) >= 20 AND p.avg_rating < 4.0 THEN 'High sales + lower rating' WHEN COALESCE(ps.units_sold, 0) <= 5 AND p.avg_rating >= 4.5 THEN 'Low sales + high rating' ELSE 'Other' END AS product_signal FROM products p LEFT JOIN product_sales ps ON ps.product_id = p.product_id ORDER BY units_sold DESC, avg_rating DESC;",
+"ex-09-s2":"WITH product_sales AS (SELECT oi.product_id, SUM(oi.quantity) AS units_sold FROM order_items oi JOIN orders o ON o.order_id = oi.order_id WHERE o.order_status NOT IN ('cancelled', 'returned') GROUP BY oi.product_id) SELECT CASE WHEN p.price_idr < 250000 THEN '<250K' WHEN p.price_idr < 500000 THEN '250K-<500K' WHEN p.price_idr < 750000 THEN '500K-<750K' ELSE '>=750K' END AS price_band, COUNT(*) AS products, ROUND(AVG(COALESCE(ps.units_sold, 0)), 2) AS avg_units_sold_per_product, SUM(COALESCE(ps.units_sold, 0)) AS total_units_sold FROM products p LEFT JOIN product_sales ps ON ps.product_id = p.product_id GROUP BY 1 ORDER BY MIN(p.price_idr);",
+"ex-10-s1":"WITH customer_sales AS (SELECT c.customer_id, c.name, c.gender, c.age_group, c.city, c.province, COUNT(o.order_id) AS valid_order_count, SUM(o.total_amount_idr) AS revenue_idr, MIN(o.order_date) AS first_valid_order_date, MAX(o.order_date) AS last_valid_order_date FROM customers c JOIN orders o ON o.customer_id = c.customer_id WHERE o.order_status NOT IN ('cancelled', 'returned') GROUP BY c.customer_id, c.name, c.gender, c.age_group, c.city, c.province) SELECT COUNT(*) AS buying_customers, ROUND(AVG(valid_order_count), 2) AS avg_orders_per_buying_customer, ROUND(AVG(revenue_idr), 2) AS avg_revenue_per_buying_customer, COUNT(*) FILTER (WHERE valid_order_count = 1) AS one_time_buyers, COUNT(*) FILTER (WHERE valid_order_count > 1) AS repeat_buyers, ROUND(100.0 * COUNT(*) FILTER (WHERE valid_order_count > 1) / NULLIF(COUNT(*), 0), 2) AS repeat_buyer_rate_pct FROM customer_sales;",
+"ex-10-s2":"WITH customer_sales AS (SELECT o.customer_id, COUNT(*) AS order_count, SUM(o.total_amount_idr) AS revenue_idr FROM orders o WHERE o.order_status NOT IN ('cancelled', 'returned') GROUP BY o.customer_id), ranked AS (SELECT *, RANK() OVER (ORDER BY revenue_idr DESC) AS revenue_rank, RANK() OVER (ORDER BY order_count DESC) AS order_rank FROM customer_sales) SELECT customer_id, order_count, revenue_idr, revenue_rank, order_rank, revenue_rank + order_rank AS combined_rank_score FROM ranked ORDER BY combined_rank_score, customer_id LIMIT 25;",
+"ex-11-s1":"WITH valid_orders AS (SELECT * FROM orders WHERE order_status NOT IN ('cancelled', 'returned')), customer_metrics AS (SELECT customer_id, MAX(order_date) AS last_order_date, COUNT(*) AS frequency, SUM(total_amount_idr) AS monetary FROM valid_orders GROUP BY customer_id), reference_date AS (SELECT MAX(order_date) AS max_order_date FROM valid_orders), scored AS (SELECT cm.*, (rd.max_order_date - cm.last_order_date) AS recency_days, NTILE(4) OVER (ORDER BY cm.last_order_date DESC) AS r_score, NTILE(4) OVER (ORDER BY cm.frequency) AS f_score, NTILE(4) OVER (ORDER BY cm.monetary) AS m_score FROM customer_metrics cm CROSS JOIN reference_date rd) SELECT customer_id, recency_days, frequency, monetary AS revenue_idr, r_score, f_score, m_score, CASE WHEN r_score >= 3 AND f_score >= 3 AND m_score >= 3 THEN 'High-value active' WHEN f_score >= 3 AND m_score >= 3 THEN 'Frequent high-value' WHEN r_score >= 3 THEN 'Recent buyers' WHEN r_score = 1 AND f_score <= 2 AND m_score <= 2 THEN 'Lapsed low-value' ELSE 'Mid-tier' END AS segment FROM scored ORDER BY revenue_idr DESC;",
+"ex-12-s1":"WITH valid_orders AS (SELECT customer_id, order_id, order_date FROM orders WHERE order_status NOT IN ('cancelled', 'returned')), first_purchase AS (SELECT customer_id, DATE_TRUNC('month', MIN(order_date))::DATE AS cohort_month FROM valid_orders GROUP BY customer_id), customer_months AS (SELECT DISTINCT vo.customer_id, DATE_TRUNC('month', vo.order_date)::DATE AS purchase_month FROM valid_orders vo), cohort_activity AS (SELECT fp.cohort_month, cm.purchase_month, COUNT(DISTINCT cm.customer_id) AS active_customers FROM first_purchase fp JOIN customer_months cm ON cm.customer_id = fp.customer_id GROUP BY fp.cohort_month, cm.purchase_month), cohort_sizes AS (SELECT cohort_month, COUNT(*) AS cohort_customers FROM first_purchase GROUP BY cohort_month) SELECT ca.cohort_month, ca.purchase_month, ((EXTRACT(YEAR FROM ca.purchase_month) - EXTRACT(YEAR FROM ca.cohort_month)) * 12 + EXTRACT(MONTH FROM ca.purchase_month) - EXTRACT(MONTH FROM ca.cohort_month))::INT AS month_number, cs.cohort_customers, ca.active_customers, ROUND(100.0 * ca.active_customers / NULLIF(cs.cohort_customers, 0), 2) AS retention_rate_pct FROM cohort_activity ca JOIN cohort_sizes cs USING (cohort_month) ORDER BY ca.cohort_month, month_number;",
+"ex-13-s1":"WITH valid_orders AS (SELECT * FROM orders WHERE order_status NOT IN ('cancelled', 'returned')), promo_summary AS (SELECT COALESCE(promo_code, 'NO_PROMO') AS promo_code, COUNT(*) AS orders, SUM(total_amount_idr) AS revenue_idr, AVG(total_amount_idr) AS aov_idr, SUM(COALESCE(discount_amount_idr, 0)) AS discount_idr FROM valid_orders GROUP BY COALESCE(promo_code, 'NO_PROMO')) SELECT promo_code, orders, revenue_idr, ROUND(aov_idr, 2) AS aov_idr, discount_idr, ROUND(100.0 * orders / SUM(orders) OVER (), 2) AS order_share_pct FROM promo_summary ORDER BY revenue_idr DESC;",
+"ex-13-s2":"SELECT CASE WHEN promo_code IS NULL THEN 'No promo' ELSE 'Promo used' END AS promo_group, COUNT(*) AS valid_orders, SUM(total_amount_idr) AS revenue_idr, ROUND(AVG(total_amount_idr), 2) AS aov_idr, SUM(COALESCE(discount_amount_idr, 0)) AS discount_idr FROM orders WHERE order_status NOT IN ('cancelled', 'returned') GROUP BY 1 ORDER BY 1;",
+"ex-14-s1":"WITH promo_items AS (SELECT oi.product_id, oi.quantity, oi.subtotal_idr FROM orders o JOIN order_items oi ON oi.order_id = o.order_id WHERE o.order_status NOT IN ('cancelled', 'returned') AND o.promo_code IS NOT NULL) SELECT p.category, SUM(pi.quantity) AS units_sold, SUM(pi.subtotal_idr) AS item_revenue_idr, COUNT(DISTINCT pi.product_id) AS products_sold FROM promo_items pi JOIN products p ON p.product_id = pi.product_id GROUP BY p.category ORDER BY item_revenue_idr DESC;",
+"ex-14-s2":"WITH promo_items AS (SELECT oi.product_id, oi.quantity, oi.subtotal_idr FROM orders o JOIN order_items oi ON oi.order_id = o.order_id WHERE o.order_status NOT IN ('cancelled', 'returned') AND o.promo_code IS NOT NULL) SELECT p.product_id, p.name, p.category, SUM(pi.quantity) AS units_sold, SUM(pi.subtotal_idr) AS item_revenue_idr FROM promo_items pi JOIN products p ON p.product_id = pi.product_id GROUP BY p.product_id, p.name, p.category ORDER BY units_sold DESC, item_revenue_idr DESC LIMIT 20;",
+"ex-15-s1":"SELECT courier, COUNT(*) AS orders, COUNT(*) FILTER (WHERE order_status = 'returned') AS returned_orders, COUNT(*) FILTER (WHERE order_status = 'cancelled') AS cancelled_orders, ROUND(100.0 * COUNT(*) FILTER (WHERE order_status = 'returned') / NULLIF(COUNT(*), 0), 2) AS return_rate_pct, ROUND(100.0 * COUNT(*) FILTER (WHERE order_status = 'cancelled') / NULLIF(COUNT(*), 0), 2) AS cancellation_rate_pct, ROUND(AVG(shipping_cost_idr), 2) AS avg_shipping_cost_idr FROM orders GROUP BY courier ORDER BY return_rate_pct DESC, orders DESC;",
+"ex-15-s2":"SELECT shipping_province, COUNT(*) AS orders, COUNT(*) FILTER (WHERE order_status = 'returned') AS returned_orders, ROUND(100.0 * COUNT(*) FILTER (WHERE order_status = 'returned') / NULLIF(COUNT(*), 0), 2) AS return_rate_pct, ROUND(AVG(shipping_cost_idr), 2) AS avg_shipping_cost_idr FROM orders GROUP BY shipping_province HAVING COUNT(*) >= 20 ORDER BY return_rate_pct DESC, orders DESC;",
+"ex-15-s3":"SELECT courier, shipping_province, COUNT(*) AS orders, COUNT(*) FILTER (WHERE order_status = 'returned') AS returned_orders, ROUND(100.0 * COUNT(*) FILTER (WHERE order_status = 'returned') / NULLIF(COUNT(*), 0), 2) AS return_rate_pct FROM orders GROUP BY courier, shipping_province HAVING COUNT(*) >= 10 ORDER BY return_rate_pct DESC, orders DESC;",
+"ex-16-s1":"SELECT rating, COUNT(*) AS review_count, ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2) AS review_share_pct FROM reviews GROUP BY rating ORDER BY rating;",
+"ex-16-s2":"SELECT COUNT(*) AS total_reviews, COUNT(*) FILTER (WHERE review_text IS NULL) AS missing_review_text, ROUND(100.0 * COUNT(*) FILTER (WHERE review_text IS NULL) / NULLIF(COUNT(*), 0), 2) AS missing_text_pct, COUNT(DISTINCT product_id) AS reviewed_products, COUNT(DISTINCT customer_id) AS reviewing_customers FROM reviews;",
+"ex-16-s3":"SELECT review_id, product_id, rating, helpful_count, review_date, review_text FROM reviews ORDER BY helpful_count DESC, review_date DESC LIMIT 20;",
+"ex-16-s4":"SELECT p.product_id, p.name, p.category, COUNT(r.review_id) AS review_count, ROUND(AVG(r.rating), 2) AS avg_review_rating, SUM(r.helpful_count) AS helpful_votes FROM products p JOIN reviews r ON r.product_id = p.product_id GROUP BY p.product_id, p.name, p.category HAVING COUNT(r.review_id) >= 5 ORDER BY avg_review_rating ASC, review_count DESC;",
+"ex-17-s1":"WITH sales AS (SELECT oi.product_id, SUM(oi.quantity) AS units_sold, SUM(oi.subtotal_idr) AS revenue_idr FROM order_items oi JOIN orders o ON o.order_id = oi.order_id WHERE o.order_status NOT IN ('cancelled', 'returned') GROUP BY oi.product_id), review_stats AS (SELECT product_id, COUNT(*) AS review_count, AVG(rating) AS avg_review_rating FROM reviews GROUP BY product_id), product_metrics AS (SELECT p.product_id, p.name, p.category, COALESCE(s.units_sold, 0) AS units_sold, COALESCE(s.revenue_idr, 0) AS revenue_idr, rs.review_count, rs.avg_review_rating FROM products p LEFT JOIN sales s ON s.product_id = p.product_id LEFT JOIN review_stats rs ON rs.product_id = p.product_id) SELECT *, RANK() OVER (ORDER BY units_sold DESC) AS sales_rank, RANK() OVER (ORDER BY avg_review_rating DESC NULLS LAST) AS rating_rank, CASE WHEN avg_review_rating >= 4.5 AND units_sold <= 5 THEN 'High rating + low sales' WHEN avg_review_rating < 3.5 AND units_sold >= 20 THEN 'Lower rating + high sales' ELSE 'Other' END AS experience_signal FROM product_metrics WHERE review_count IS NOT NULL ORDER BY CASE WHEN experience_signal <> 'Other' THEN 0 ELSE 1 END, avg_review_rating DESC NULLS LAST, units_sold DESC;",
+"ex-18-s1":"WITH valid_order_products AS (SELECT DISTINCT oi.order_id, oi.product_id FROM order_items oi JOIN orders o ON o.order_id = oi.order_id WHERE o.order_status NOT IN ('cancelled', 'returned')), pairs AS (SELECT a.product_id AS product_a, b.product_id AS product_b, COUNT(*) AS order_pair_count FROM valid_order_products a JOIN valid_order_products b ON a.order_id = b.order_id AND a.product_id < b.product_id GROUP BY a.product_id, b.product_id) SELECT p1.name AS product_a, p2.name AS product_b, pairs.order_pair_count, RANK() OVER (ORDER BY pairs.order_pair_count DESC) AS pair_rank FROM pairs JOIN products p1 ON p1.product_id = pairs.product_a JOIN products p2 ON p2.product_id = pairs.product_b ORDER BY pair_rank, product_a, product_b LIMIT 30;",
+"ex-19-s1":"WITH customer_orders AS (SELECT o.order_id, o.customer_id, COUNT(*) OVER (PARTITION BY o.customer_id) AS customer_order_count, SUM(o.total_amount_idr) OVER (PARTITION BY o.customer_id) AS customer_revenue FROM orders o WHERE o.order_status NOT IN ('cancelled', 'returned')), customer_segment AS (SELECT DISTINCT customer_id, CASE WHEN customer_order_count >= 5 AND customer_revenue >= 5000000 THEN 'High-value repeat' WHEN customer_order_count >= 2 THEN 'Repeat' ELSE 'One-time' END AS customer_segment FROM customer_orders), product_clean AS (SELECT product_id, CASE WHEN LOWER(TRIM(category)) = 'dress' THEN 'Dress' WHEN LOWER(TRIM(category)) IN ('jacket', 'jaket') THEN 'Jaket' WHEN LOWER(TRIM(category)) = 'kaos' THEN 'Kaos' WHEN LOWER(TRIM(category)) = 'kemeja' THEN 'Kemeja' WHEN LOWER(TRIM(category)) = 't-shirt' THEN 'T-Shirt' ELSE TRIM(category) END AS category_normalized FROM products) SELECT cs.customer_segment, pc.category_normalized, COUNT(DISTINCT co.customer_id) AS customers, SUM(oi.quantity) AS units_sold, SUM(oi.subtotal_idr) AS item_revenue_idr, RANK() OVER (PARTITION BY cs.customer_segment ORDER BY SUM(oi.subtotal_idr) DESC) AS category_rank_within_segment FROM customer_orders co JOIN customer_segment cs ON cs.customer_id = co.customer_id JOIN order_items oi ON oi.order_id = co.order_id JOIN product_clean pc ON pc.product_id = oi.product_id GROUP BY cs.customer_segment, pc.category_normalized ORDER BY cs.customer_segment, category_rank_within_segment;",
+"ex-20-s1":"WITH sales AS (SELECT oi.product_id, SUM(oi.quantity) AS units_sold FROM order_items oi JOIN orders o ON o.order_id = oi.order_id WHERE o.order_status NOT IN ('cancelled', 'returned') GROUP BY oi.product_id) SELECT p.product_id, p.name, p.brand, p.stock, COALESCE(s.units_sold, 0) AS units_sold, 'RESTOCK_REVIEW' AS action_signal FROM products p LEFT JOIN sales s ON s.product_id = p.product_id WHERE COALESCE(s.units_sold, 0) > 0 AND p.stock <= 20 ORDER BY units_sold DESC, stock ASC;",
+"ex-20-s2":"WITH sales AS (SELECT oi.product_id, SUM(oi.quantity) AS units_sold FROM order_items oi JOIN orders o ON o.order_id = oi.order_id WHERE o.order_status NOT IN ('cancelled', 'returned') GROUP BY oi.product_id) SELECT p.product_id, p.name, p.brand, p.stock, COALESCE(s.units_sold, 0) AS units_sold, 'DEAD_STOCK_REVIEW' AS action_signal FROM products p LEFT JOIN sales s ON s.product_id = p.product_id WHERE p.stock >= 150 AND COALESCE(s.units_sold, 0) <= 5 ORDER BY stock DESC, units_sold ASC;",
+"ex-20-s3":"SELECT courier, shipping_province, COUNT(*) AS orders, COUNT(*) FILTER (WHERE order_status = 'returned') AS returned_orders, ROUND(100.0 * COUNT(*) FILTER (WHERE order_status = 'returned') / NULLIF(COUNT(*), 0), 2) AS return_rate_pct, 'LOGISTICS_REVIEW' AS action_signal FROM orders GROUP BY courier, shipping_province HAVING COUNT(*) >= 10 ORDER BY return_rate_pct DESC, orders DESC;"
+};
+
+/* ============================================================
+   REQUIRED-TECHNIQUE MAP
+   Sub-exercises whose requirements explicitly call for a specific
+   SQL technique. Detection is a best-effort regex hint — it does
+   not reject a query that uses an equivalent technique.
+   ============================================================ */
+const TECHNIQUE_REQS = {
+  "ex-01-s1": [{ pattern: "UNION ALL", label: "UNION ALL to combine the 5 table profiles into one result set" }],
+  "ex-03-s2": [{ pattern: "WITH\\b", label: "a CTE (WITH) to aggregate order_items to order level before computing totals" }],
+  "ex-04-s1": [{ pattern: "LAG\\s*\\(", label: "the LAG() window function for previous-month values" }],
+  "ex-05-s1": [{ pattern: "CROSS JOIN", label: "a CROSS JOIN with the total-revenue CTE for contribution %" }],
+  "ex-06-s1": [{ pattern: "RANK\\s*\\(", label: "RANK() window functions for both units and revenue" }],
+  "ex-07-s2": [{ pattern: "SUM\\(revenue_idr\\)\\s+OVER\\s*\\(\\)", label: "window SUM(revenue_idr) OVER () as the contribution denominator" }],
+  "ex-10-s2": [{ pattern: "RANK\\s*\\(", label: "RANK() over revenue and order count, summed into a combined score" }],
+  "ex-11-s1": [{ pattern: "NTILE\\s*\\(", label: "NTILE(4) quartile scoring for recency, frequency, and monetary" }],
+  "ex-12-s1": [{ pattern: "DATE_TRUNC", label: "DATE_TRUNC('month', ...) to anchor cohorts to calendar months" }],
+  "ex-13-s1": [{ pattern: "SUM\\(orders\\)\\s+OVER\\s*\\(\\)", label: "window SUM(orders) OVER () for the order-share denominator" }],
+  "ex-16-s1": [{ pattern: "SUM\\(COUNT\\(\\*\\)\\)\\s+OVER\\s*\\(\\)", label: "window SUM(COUNT(*)) OVER () for the rating-share denominator" }],
+  "ex-17-s1": [{ pattern: "RANK\\s*\\(", label: "RANK() window functions for sales and rating rankings" }],
+  "ex-18-s1": [{ pattern: "RANK\\s*\\(", label: "RANK() over pair counts with a self-join where product_a < product_b" }],
+  "ex-19-s1": [{ pattern: "OVER\\s*\\(\\s*PARTITION BY", label: "window OVER (PARTITION BY customer_segment) for within-segment ranking" }]
+};
+
+/* ============================================================
+   CATEGORIES
+   ============================================================ */
+const CATEGORIES = ["Data Quality and Validation","Core Sales KPIs","Sales Trends and Period Comparisons","Geography and Payment Analysis","Product, Category, and Brand Performance","Stock and Sales Opportunities","Customer Analytics and Segmentation","Cohort and Retention Analysis","Promotion and Discount Analysis","Logistics and Operations","Reviews and Customer Experience","Advanced SQL Analytics","Executive Business Insights"];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const STORAGE_KEY = "gayanara_sql_practice_lab_v2";
+const OLD_STORAGE_KEY = "gayanara_sql_practice_lab_v1";
+
+// Backend base URL — empty means "auto-detect" (try localhost:8765, then report unavailable).
+// Set explicitly if the backend runs on a different port or host.
+const BACKEND_BASE = "";  // e.g. "http://127.0.0.1:8765"
+
+let state = {
+  answers: {},
+  notes: {},
+  completed: {},
+  validation: {},   // { subId: { status, message, at, query } } — separate from answers
+  currentView: "dashboard",
+  expandedParents: {},
+  filters: { search: "", difficulty: "", category: "", status: "" }
+};
+
+let submittingSubId = null;  // guard against concurrent submissions
+
+let localStorageAvailable = true;
+let totalSubs = 0;
+
+/* Count all sub-exercises */
+for (const p of PARENTS) totalSubs += p.subs.length;
+
+/* Build a flat lookup for sub-exercises */
+const SUB_MAP = {};
+for (const p of PARENTS) {
+  for (const s of p.subs) {
+    SUB_MAP[s.id] = { sub: s, parent: p };
+  }
+}
+const ALL_SUBS = Object.values(SUB_MAP);
+
+/* ============================================================
+   PERSISTENCE + MIGRATION
+   ============================================================ */
+function loadState() {
+  // Try new key first
+  let migrated = false;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === "object") {
+        state.answers = parsed.answers || {};
+        state.notes = parsed.notes || {};
+        state.completed = parsed.completed || {};
+        state.validation = parsed.validation || {};
+      }
+    }
+  } catch(e) {
+    localStorageAvailable = false;
+  }
+
+  // If no new data, try old key and migrate
+  if (!localStorageAvailable) {
+    showToast("LocalStorage is unavailable. Progress will not persist between sessions.", "error");
+    return;
+  }
+  if (Object.keys(state.answers).length === 0) {
+    try {
+      const oldRaw = localStorage.getItem(OLD_STORAGE_KEY);
+      if (oldRaw) {
+        const oldParsed = JSON.parse(oldRaw);
+        if (oldParsed && oldParsed.answers) {
+          // Migrate: for each old parent key, if no sub answers exist, assign to first sub
+          for (const [oldKey, val] of Object.entries(oldParsed.answers)) {
+            if (val && val.trim() && !state.answers[oldKey]) {
+              // Find the parent and assign to first sub
+              const parent = PARENTS.find(p => p.id === oldKey);
+              if (parent && parent.subs.length > 0) {
+                const firstSubId = parent.subs[0].id;
+                if (!state.answers[firstSubId]) {
+                  state.answers[firstSubId] = val;
+                }
+              }
+            }
+          }
+          if (oldParsed.notes) {
+            for (const [oldKey, val] of Object.entries(oldParsed.notes)) {
+              if (val && !state.notes[oldKey]) {
+                const parent = PARENTS.find(p => p.id === oldKey);
+                if (parent && parent.subs.length > 0) {
+                  state.notes[parent.subs[0].id] = val;
+                }
+              }
+            }
+          }
+          if (oldParsed.completed) {
+            for (const oldKey of Object.keys(oldParsed.completed)) {
+              if (oldParsed.completed[oldKey] && !state.completed[oldKey]) {
+                const parent = PARENTS.find(p => p.id === oldKey);
+                if (parent && parent.subs.length > 0) {
+                  state.completed[parent.subs[0].id] = true;
+                }
+              }
+            }
+          }
+          migrated = true;
+        }
+      }
+    } catch(e) { /* ignore old key errors */ }
+  }
+
+  if (migrated) {
+    saveState();
+    showToast("Your previous answers have been migrated. They were assigned to the first sub-exercise of each parent. Review and redistribute as needed.", "success");
+  }
+}
+
+function saveState() {
+  if (!localStorageAvailable) return;
+  try {
+    const data = { answers: state.answers, notes: state.notes, completed: state.completed, validation: state.validation };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch(e) {
+    showToast("Failed to save progress. Storage may be full or blocked.", "error");
+  }
+}
+
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+function esc(s) {
+  if (s == null) return "";
+  const d = document.createElement("div");
+  d.textContent = String(s);
+  return d.innerHTML;
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast visible " + (type || "");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.className = "toast"; }, 4000);
+}
+
+function getProgress() {
+  const total = totalSubs;
+  const completed = ALL_SUBS.filter(s => state.completed[s.sub.id]).length;
+  const saved = ALL_SUBS.filter(s => state.answers[s.sub.id] && state.answers[s.sub.id].trim() !== "").length;
+  const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+  return { total, completed, saved, pct };
+}
+
+function getParentProgress(parent) {
+  const total = parent.subs.length;
+  const done = parent.subs.filter(s => state.completed[s.id]).length;
+  return { total, done, pct: total > 0 ? Math.round((done/total)*100) : 0 };
+}
+
+function getFilteredSubs() {
+  let list = [...ALL_SUBS];
+  const { search, difficulty, category, status } = state.filters;
+  if (search) {
+    const q = search.toLowerCase();
+    list = list.filter(({sub, parent}) =>
+      sub.title.toLowerCase().includes(q) ||
+      sub.question.toLowerCase().includes(q) ||
+      parent.title.toLowerCase().includes(q) ||
+      parent.sourceFile.toLowerCase().includes(q) ||
+      parent.concepts.some(c => c.toLowerCase().includes(q)) ||
+      parent.category.toLowerCase().includes(q)
+    );
+  }
+  if (difficulty) list = list.filter(({parent}) => parent.difficulty === difficulty);
+  if (category) list = list.filter(({parent}) => parent.category === category);
+  if (status === "completed") list = list.filter(({sub}) => state.completed[sub.id]);
+  else if (status === "saved") list = list.filter(({sub}) => state.answers[sub.id] && state.answers[sub.id].trim() && !state.completed[sub.id]);
+  else if (status === "unsaved") list = list.filter(({sub}) => !state.answers[sub.id] && !state.completed[sub.id]);
+  return list;
+}
+
+/* ============================================================
+   RENDER: SIDEBAR
+   ============================================================ */
+function renderSidebar() {
+  const nav = document.getElementById("sidebarNav");
+  let html = `<button class="nav-item${state.currentView==='dashboard'?' active':''}" onclick="navigateTo('dashboard')">
+    <span class="indicator"></span>Dashboard
+  </button>`;
+
+  for (const cat of CATEGORIES) {
+    const catParents = PARENTS.filter(p => p.category === cat);
+    if (catParents.length === 0) continue;
+    html += `<div class="nav-section"><div class="nav-section-title">${esc(cat)}</div>`;
+    for (const p of catParents) {
+      const pp = getParentProgress(p);
+      const isCurrent = state.currentView === p.id || (SUB_MAP[state.currentView] && SUB_MAP[state.currentView].parent.id === p.id);
+      const expanded = state.expandedParents[p.id] || isCurrent;
+      const activeClass = isCurrent ? " active" : "";
+      const expandedClass = expanded ? " expanded" : "";
+      const progressClass = pp.done === pp.total && pp.total > 0 ? " full" : "";
+      html += `<button class="nav-parent${activeClass}${expandedClass}" onclick="toggleParent('${p.id}')">
+        <span class="parent-title">${esc(p.title)}</span>
+        <span class="parent-progress${progressClass}">${pp.done}/${pp.total}</span>
+        <span class="expand-arrow">&#9654;</span>
+      </button>`;
+      if (expanded) {
+        for (const s of p.subs) {
+          const subActive = state.currentView === s.id ? " active" : "";
+          let indClass = "";
+          if (state.completed[s.id]) indClass = "completed";
+          else if (state.answers[s.id] && state.answers[s.id].trim()) indClass = "saved";
+          html += `<button class="nav-sub${subActive}" onclick="event.stopPropagation();navigateTo('${s.id}')">
+            <span class="indicator ${indClass}"></span>${esc(s.title)}
+          </button>`;
+        }
+      }
+    }
+    html += `</div>`;
+  }
+  nav.innerHTML = html;
+
+  const pr = getProgress();
+  document.getElementById("overallProgress").style.width = pr.pct + "%";
+  document.getElementById("overallProgressText").textContent = `${pr.completed} / ${pr.total} sub-exercises completed`;
+}
+
+/* ============================================================
+   RENDER: DASHBOARD
+   ============================================================ */
+function renderDashboard() {
+  const main = document.getElementById("mainContent");
+  const pr = getProgress();
+  let html = `
+    <div class="page-header">
+      <h2>Dashboard</h2>
+      <div class="subtitle">Your Gayanara SQL practice workspace. ${pr.total} sub-exercises across ${PARENTS.length} parent topics.</div>
+    </div>
+    <div class="toolbar">
+      <button class="btn" onclick="exportProgress()">Export Progress (JSON)</button>
+      <button class="btn" onclick="importProgress()">Import Progress (JSON)</button>
+      <button class="btn btn-danger" onclick="resetAllProgress()">Reset All</button>
+    </div>
+    <div class="dashboard-grid">
+      <div class="stat-card"><div class="label">Overall Progress</div><div class="value">${pr.pct}%</div><div class="sub">${pr.completed} of ${pr.total} sub-exercises completed</div></div>
+      <div class="stat-card"><div class="label">Answers Saved</div><div class="value">${pr.saved}</div><div class="sub">Sub-exercises with saved SQL</div></div>
+      <div class="stat-card"><div class="label">Remaining</div><div class="value">${pr.total - pr.completed}</div><div class="sub">Sub-exercises not yet completed</div></div>
+    </div>
+    <div class="category-progress"><h3>Progress by Category</h3>`;
+
+  for (const cat of CATEGORIES) {
+    const catSubs = ALL_SUBS.filter(s => s.parent.category === cat);
+    if (catSubs.length === 0) continue;
+    const done = catSubs.filter(s => state.completed[s.sub.id]).length;
+    const pct = catSubs.length > 0 ? Math.round(done / catSubs.length * 100) : 0;
+    html += `<div class="cat-progress-row"><span class="cat-name">${esc(cat)}</span><div class="cat-bar"><div class="cat-fill" style="width:${pct}%"></div></div><span class="cat-pct">${done}/${catSubs.length}</span></div>`;
+  }
+
+  html += `</div>
+    <div class="filters-bar">
+      <input type="search" id="filterSearch" placeholder="Search sub-exercises by title, question, file, or concept..." value="${esc(state.filters.search)}" oninput="onSearchInput(this.value)" aria-label="Search">
+      <select id="filterDifficulty" onchange="onFilterChange()" aria-label="Difficulty">
+        <option value="">All difficulties</option>
+        <option value="Beginner"${state.filters.difficulty==='Beginner'?' selected':''}>Beginner</option>
+        <option value="Intermediate"${state.filters.difficulty==='Intermediate'?' selected':''}>Intermediate</option>
+        <option value="Advanced"${state.filters.difficulty==='Advanced'?' selected':''}>Advanced</option>
+      </select>
+      <select id="filterCategory" onchange="onFilterChange()" aria-label="Category">
+        <option value="">All categories</option>
+        ${CATEGORIES.map(c=>`<option value="${esc(c)}"${state.filters.category===c?' selected':''}>${esc(c)}</option>`).join("")}
+      </select>
+      <select id="filterStatus" onchange="onFilterChange()" aria-label="Status">
+        <option value="">All statuses</option>
+        <option value="completed"${state.filters.status==='completed'?' selected':''}>Completed</option>
+        <option value="saved"${state.filters.status==='saved'?' selected':''}>Has saved answer</option>
+        <option value="unsaved"${state.filters.status==='unsaved'?' selected':''}>No answer yet</option>
+      </select>
+    </div>
+    <div id="exerciseList">`;
+
+  const filtered = getFilteredSubs();
+  if (filtered.length === 0) {
+    html += `<div class="empty-state"><h3>No sub-exercises match your filters</h3><p>Try adjusting the search or filter criteria.</p></div>`;
+  } else {
+    // Group by parent for display
+    const grouped = {};
+    for (const {sub, parent} of filtered) {
+      if (!grouped[parent.id]) grouped[parent.id] = { parent, subs: [] };
+      grouped[parent.id].subs.push(sub);
+    }
+    for (const pid in grouped) {
+      const {parent, subs} = grouped[pid];
+      const pp = getParentProgress(parent);
+      html += `<div style="margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;padding:4px 0;">
+          <span class="badge badge-${parent.difficulty.toLowerCase()}">${parent.difficulty}</span>
+          ${esc(parent.title)} <span style="font-size:11px;color:var(--text-muted);">(${pp.done}/${pp.total} complete)</span>
+        </div>`;
+      for (const s of subs) {
+        const status = state.completed[s.id] ? "completed" : (state.answers[s.id]&&state.answers[s.id].trim()?"saved":"pending");
+        const statusLabel = state.completed[s.id]?"Completed":(state.answers[s.id]&&state.answers[s.id].trim()?"Answer saved":"Not started");
+        html += `<div class="sub-list-item" onclick="navigateTo('${s.id}')">
+          <span class="sub-num">${s.id.split('-s')[1]}</span>
+          <span class="sub-title">${esc(s.title)}</span>
+          <span class="sub-status ${status}">${statusLabel}</span>
+        </div>`;
+      }
+      html += `</div>`;
+    }
+  }
+  html += `</div>`;
+  main.innerHTML = html;
+}
+
+/* ============================================================
+   RENDER: PARENT OVERVIEW
+   ============================================================ */
+function renderParent(parentId) {
+  const p = PARENTS.find(x => x.id === parentId);
+  if (!p) { renderDashboard(); return; }
+  const main = document.getElementById("mainContent");
+  const pp = getParentProgress(p);
+  const pIdx = PARENTS.indexOf(p);
+
+  let html = `
+    <div class="breadcrumb"><a onclick="navigateTo('dashboard')">&larr; Dashboard</a> &rsaquo; ${esc(p.category)}</div>
+    <div class="page-header">
+      <h2>${esc(p.title)}</h2>
+      <div class="subtitle">Parent ${pIdx+1} of ${PARENTS.length} &mdash; ${pp.done}/${pp.total} sub-exercises complete</div>
+    </div>
+    <div class="exercise-container">
+      <div class="exercise-header">
+        <div class="meta">
+          <span class="badge badge-${p.difficulty.toLowerCase()}">${p.difficulty}</span>
+          <span class="badge badge-category">${esc(p.category)}</span>
+          <span style="font-size:12px;color:var(--text-muted);margin-left:auto;">${p.sourceFile}</span>
+        </div>
+        <h3>Sub-exercises</h3>
+      </div>
+      <div class="exercise-body">
+        <div class="section-title">Business Context</div>
+        <div class="business-context">${esc(p.businessContext)}</div>
+        <div class="section-title">Learning Concepts</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;">
+          ${p.concepts.map(c=>`<span class="badge badge-status">${esc(c)}</span>`).join("")}
+        </div>
+        <div class="sub-list">`;
+
+  for (const s of p.subs) {
+    const status = state.completed[s.id] ? "completed" : (state.answers[s.id]&&state.answers[s.id].trim()?"saved":"pending");
+    const statusLabel = state.completed[s.id]?"Completed":(state.answers[s.id]&&state.answers[s.id].trim()?"Answer saved":"Not started");
+    html += `<div class="sub-list-item" onclick="navigateTo('${s.id}')">
+      <span class="sub-num">${s.id.split('-s')[1]}</span>
+      <span class="sub-title">${esc(s.title)}</span>
+      <span class="sub-status ${status}">${statusLabel}</span>
+    </div>`;
+  }
+
+  html += `</div>
+      <div class="exercise-nav">
+        <button class="btn" onclick="navigateTo('dashboard')">&larr; Dashboard</button>
+        <div style="display:flex;gap:8px;align-items:center;">
+          ${pIdx>0?`<button class="btn" onclick="navigateTo('${PARENTS[pIdx-1].id}')">&larr; Previous</button>`:""}
+          <span class="nav-info">Parent ${pIdx+1} / ${PARENTS.length}</span>
+          ${pIdx<PARENTS.length-1?`<button class="btn" onclick="navigateTo('${PARENTS[pIdx+1].id}')">Next &rarr;</button>`:""}
+        </div>
+      </div>
+    </div>`;
+  main.innerHTML = html;
+}
+
+/* ============================================================
+   RENDER: SUB-EXERCISE VIEW
+   ============================================================ */
+function renderSub(subId) {
+  const entry = SUB_MAP[subId];
+  if (!entry) { renderDashboard(); return; }
+  const { sub, parent: p } = entry;
+  const main = document.getElementById("mainContent");
+  const pIdx = PARENTS.indexOf(p);
+  const sIdx = p.subs.indexOf(sub);
+
+  let statusBadge = "";
+  if (state.completed[sub.id]) statusBadge = '<span class="badge badge-status completed">Completed</span>';
+  else if (state.answers[sub.id]&&state.answers[sub.id].trim()) statusBadge = '<span class="badge badge-status saved">Answer Saved</span>';
+  else statusBadge = '<span class="badge badge-status">Not Started</span>';
+
+  let html = `
+    <div class="breadcrumb"><a onclick="navigateTo('dashboard')">&larr; Dashboard</a> &rsaquo; <a onclick="navigateTo('${p.id}')">${esc(p.title)}</a> &rsaquo; Sub ${sIdx+1}</div>
+    <div class="page-header">
+      <h2>${esc(sub.title)}</h2>
+      <div class="subtitle">Parent ${pIdx+1} of ${PARENTS.length}, Sub-exercise ${sIdx+1} of ${p.subs.length} &mdash; ${esc(p.category)}</div>
+    </div>
+    <div class="exercise-container">
+      <div class="exercise-header">
+        <div class="meta">
+          <span class="badge badge-${p.difficulty.toLowerCase()}">${p.difficulty}</span>
+          <span class="badge badge-category">${esc(p.category)}</span>
+          ${statusBadge}
+          <span style="font-size:12px;color:var(--text-muted);margin-left:auto;">${p.sourceFile}</span>
+        </div>
+        <h3>Sub-exercise ${sIdx+1}: ${esc(sub.title)}</h3>
+      </div>
+      <div class="exercise-body">
+        <div class="section-title">Task</div>
+        <div class="question-box">
+          <div class="question-text">${esc(sub.question)}</div>
+          <ul class="requirements-list">
+            ${sub.requirements.map(r=>`<li>${esc(r)}</li>`).join("")}
+          </ul>
+        </div>
+
+        <div class="metric-defs"><strong>Metric Definitions &amp; Rules:</strong> ${esc(sub.metricDefs)}</div>
+
+        <div class="source-sql schema">
+          <div class="source-sql-toggle" onclick="toggleSourceSql(this)" role="button" tabindex="0" onkeydown="if(event.key==='Enter')this.click()" aria-expanded="false">
+            <span>View Data Schema</span>
+            <span class="arrow">&#9654;</span>
+          </div>
+          <div class="source-sql-content">${renderSchemaHtml(sub.id)}</div>
+        </div>
+
+        <div class="expected-output">
+          <div class="section-title">Expected Output</div>
+          <table class="expected-table">
+            <thead><tr>${sub.expectedOutput.columns.map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead>
+            <tbody><tr>${sub.expectedOutput.columns.map((c,i)=>`<td class="placeholder">${esc(sub.expectedOutput.columnNotes[i]||"Your query result")}</td>`).join("")}</tr></tbody>
+          </table>
+          <div class="expected-table-meta">Grain: ${esc(sub.expectedOutput.grain)} | Sort: ${esc(sub.expectedOutput.sortOrder)} | <em>Schema-only specification. Execute your query in pgAdmin 4 for actual results.</em></div>
+        </div>
+
+        <div class="sql-editor">
+          <label for="sqlEditor">Your SQL Answer</label>
+          <textarea id="sqlEditor" placeholder="-- Write your PostgreSQL query here" spellcheck="false">${esc(state.answers[sub.id]||"")}</textarea>
+          <div class="sql-actions">
+            <button class="btn btn-primary" id="submitBtn" onclick="submitQuery('${sub.id}')">Submit Query</button>
+            <button class="btn btn-primary" onclick="copyAnswer('${sub.id}')">Copy SQL</button>
+            <button class="btn" onclick="saveAnswer('${sub.id}')">Save Answer</button>
+            <button class="btn btn-danger" onclick="resetAnswer('${sub.id}')">Reset</button>
+          </div>
+          <div class="validation-banner" id="validationBanner" role="status" aria-live="polite"></div>
+          <div class="completion-control">
+            <input type="checkbox" id="completeChk" ${state.completed[sub.id]?"checked":""} onchange="toggleComplete('${sub.id}',this.checked)" aria-label="Mark complete">
+            <label for="completeChk">Mark as completed</label>
+            <span class="save-status ${state.answers[sub.id]&&state.answers[sub.id].trim()?'saved':'unsaved'}" id="saveStatus">${state.answers[sub.id]&&state.answers[sub.id].trim()?"Answer saved":"No answer saved"}</span>
+          </div>
+        </div>
+
+        <div class="notes-section">
+          <label for="notesEditor" style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">Personal Notes</label>
+          <textarea id="notesEditor" placeholder="Your notes about this sub-exercise...">${esc(state.notes[sub.id]||"")}</textarea>
+          <button class="btn btn-sm" style="margin-top:6px;" onclick="saveNotes('${sub.id}')">Save Notes</button>
+        </div>
+
+        <div class="source-sql">
+          <div class="source-sql-toggle" onclick="toggleSourceSql(this)" role="button" tabindex="0" onkeydown="if(event.key==='Enter')this.click()" aria-expanded="false">
+            <span>View Source SQL Reference (${esc(p.sourceFile)})</span>
+            <span class="arrow">&#9654;</span>
+          </div>
+          <div class="source-sql-content">${esc(p.sourceSQL)}</div>
+        </div>
+      </div>
+
+      <div class="exercise-nav">
+        <button class="btn" onclick="navigateTo('${p.id}')">&larr; ${esc(p.title)}</button>
+        <div style="display:flex;gap:8px;align-items:center;">
+          ${sIdx>0?`<button class="btn" onclick="navigateTo('${p.subs[sIdx-1].id}')">&larr; Prev</button>`:""}
+          <span class="nav-info">Sub ${sIdx+1} / ${p.subs.length}</span>
+          ${sIdx<p.subs.length-1?`<button class="btn" onclick="navigateTo('${p.subs[sIdx+1].id}')">Next &rarr;</button>`:""}
+        </div>
+      </div>
+    </div>`;
+  main.innerHTML = html;
+
+  const editor = document.getElementById("sqlEditor");
+  if (editor) {
+    editor.addEventListener("keydown", function(e) {
+      if ((e.ctrlKey||e.metaKey) && e.key==="Enter") { e.preventDefault(); saveAnswer(sub.id); }
+    });
+  }
+  // Restore last validation banner state for this sub-exercise
+  restoreValidationBanner(sub.id);
+}
+
+/* ============================================================
+   ACTIONS
+   ============================================================ */
+function navigateTo(view) {
+  state.currentView = view;
+  // Expand the parent in the sidebar if navigating to a sub-exercise
+  if (SUB_MAP[view]) {
+    state.expandedParents[SUB_MAP[view].parent.id] = true;
+  }
+  renderSidebar();
+  if (view === "dashboard") renderDashboard();
+  else if (PARENTS.find(p=>p.id===view)) renderParent(view);
+  else if (SUB_MAP[view]) renderSub(view);
+  else renderDashboard();
+  window.scrollTo(0,0);
+}
+
+function toggleParent(pid) {
+  // Clicking a parent always opens its overview page and reveals its
+  // sub-exercises in the sidebar.
+  state.expandedParents[pid] = true;
+  navigateTo(pid);
+}
+
+function copyAnswer(subId) {
+  const text = state.answers[subId] || "";
+  if (!text.trim()) { showToast("No SQL to copy. Write your answer first.", "error"); return; }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(()=>showToast("SQL copied. Paste into pgAdmin 4 to execute.","success")).catch(()=>fallbackCopy(text));
+  } else fallbackCopy(text);
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement("textarea");
+  ta.value = text; ta.style.position="fixed"; ta.style.left="-9999px";
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); showToast("SQL copied. Paste into pgAdmin 4 to execute.","success"); }
+  catch(e) { showToast("Copy failed. Select and copy manually.","error"); }
+  document.body.removeChild(ta);
+}
+
+function saveAnswer(subId) {
+  const editor = document.getElementById("sqlEditor");
+  if (!editor) return;
+  const val = editor.value;
+  if (val.trim()==="") delete state.answers[subId];
+  else state.answers[subId] = val;
+  saveState();
+  const st = document.getElementById("saveStatus");
+  if (st) { st.textContent = val.trim()?"Answer saved":"No answer saved"; st.className = "save-status " + (val.trim()?"saved":"unsaved"); }
+  renderSidebar();
+  showToast("Answer saved to browser storage.","success");
+}
+
+function resetAnswer(subId) {
+  if (!confirm("Clear your saved answer for this sub-exercise? This cannot be undone.")) return;
+  delete state.answers[subId];
+  saveState();
+  renderSub(subId);
+  renderSidebar();
+  showToast("Answer cleared.","success");
+}
+
+function toggleComplete(subId, checked) {
+  if (checked) state.completed[subId] = true;
+  else delete state.completed[subId];
+  saveState();
+  renderSidebar();
+  if (checked) showToast("Sub-exercise marked as completed.","success");
+}
+
+function saveNotes(subId) {
+  const ed = document.getElementById("notesEditor");
+  if (!ed) return;
+  if (ed.value.trim()==="") delete state.notes[subId];
+  else state.notes[subId] = ed.value;
+  saveState();
+  showToast("Notes saved.","success");
+}
+
+function toggleSourceSql(el) {
+  const c = el.nextElementSibling;
+  const open = c.classList.contains("visible");
+  c.classList.toggle("visible");
+  el.classList.toggle("open");
+  el.setAttribute("aria-expanded", String(!open));
+}
+
+/* ============================================================
+   QUERY SUBMISSION + RESULT VALIDATION
+   ============================================================ */
+const VALIDATION_LABELS = {
+  correct: "Correct",
+  technique: "Correct Result — Required Technique Not Used",
+  incorrect: "Incorrect",
+  error: "Execution Error",
+  unavailable: "Validation Unavailable",
+  running: "Running…"
+};
+
+function getBackendBase() {
+  if (BACKEND_BASE) return BACKEND_BASE;
+  // Auto-detect: same origin if served, else localhost
+  if (location.protocol !== "file:") return location.origin;
+  return "http://127.0.0.1:8765";
+}
+
+async function submitQuery(subId) {
+  if (submittingSubId) return;  // prevent concurrent submissions
+  const editor = document.getElementById("sqlEditor");
+  const banner = document.getElementById("validationBanner");
+  const btn = document.getElementById("submitBtn");
+  if (!editor || !banner || !btn) return;
+
+  const sql = editor.value.trim();
+  if (!sql) {
+    banner.className = "validation-banner visible error";
+    banner.innerHTML = `<div class="vb-head"><span class="vb-icon">⚠</span> No SQL entered</div><div class="vb-detail">Write a query in the editor before submitting.</div>`;
+    return;
+  }
+
+  const refSql = REF_SQL[subId];
+  if (!refSql) {
+    banner.className = "validation-banner visible unavailable";
+    banner.innerHTML = `<div class="vb-head"><span class="vb-icon">ℹ</span> Validation Unavailable</div><div class="vb-detail">No reference query is defined for this sub-exercise. You can still write and copy your answer, but automatic validation is not available.</div>`;
+    return;
+  }
+
+  // Show running state
+  submittingSubId = subId;
+  btn.disabled = true;
+  btn.textContent = "Submitting…";
+  banner.className = "validation-banner visible running";
+  banner.innerHTML = `<div class="vb-head"><span class="vb-spin"></span> Running your query against the database…</div>`;
+
+  try {
+    const resp = await fetch(getBackendBase() + "/validate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_sql: sql, ref_sql: refSql })
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({ error: "Backend error" }));
+      // Distinguish user SQL errors (422/408) from infrastructure problems.
+      if (resp.status === 422 || resp.status === 408) {
+        banner.className = "validation-banner visible error";
+        banner.innerHTML = `<div class="vb-head"><span class="vb-icon">\u26A0</span> Execution Error</div>
+          <div class="vb-detail">${esc(err.error || "PostgreSQL rejected your query.")}</div>` +
+          (err.detail ? `<div style="margin-top:6px;font-family:var(--font-mono);font-size:12px;color:#92400e;">${esc(err.detail)}</div>` : "");
+        state.validation[subId] = { status: "error", message: err.error, at: new Date().toISOString(), query: sql };
+        saveState();
+        return; // handled — finally still resets the button
+      }
+      // 503 / 500 / network = infrastructure problem → let it fall through to catch
+      throw new Error(err.error || "Request failed (HTTP " + resp.status + ")");
+    }
+
+    const data = await resp.json();
+    const result = compareResults(data.user, data.reference, subId);
+    // Check required-technique requirements (best-effort regex hint)
+    if (result.status === "correct") {
+      const techs = TECHNIQUE_REQS[subId];
+      if (techs) {
+        const missing = techs.filter(t => {
+          try { return !new RegExp(t.pattern, "i").test(sql); }
+          catch (_) { return false; }
+        });
+        if (missing.length > 0) {
+          result.status = "technique";
+          result.techniqueNote = missing.map(t => t.label).join("; ");
+        }
+      }
+    }
+    displayValidation(subId, result, data);
+    state.validation[subId] = {
+      status: result.status,
+      message: result.summary,
+      detail: result.details,
+      at: new Date().toISOString(),
+      query: sql
+    };
+    saveState();
+
+  } catch (err) {
+    // Network error or backend not reachable
+    banner.className = "validation-banner visible unavailable";
+    const msg = err.message || String(err);
+    let detail = "Could not reach the validation backend. ";
+    if (msg.includes("Failed to fetch") || msg.includes("NetworkError")) {
+      detail += "Make sure the backend is running (python server.py) and the database is accessible. See the backend instructions in the project README.";
+    } else if (msg.includes("read only") || msg.includes("permission")) {
+      detail += "The database connection may lack read access to the required tables.";
+    } else {
+      detail += msg;
+    }
+    banner.innerHTML = `<div class="vb-head"><span class="vb-icon">ℹ</span> Validation Unavailable</div><div class="vb-detail">${esc(detail)}</div>`;
+    state.validation[subId] = { status: "unavailable", message: "Backend unreachable: " + msg, at: new Date().toISOString(), query: sql };
+    saveState();
+  } finally {
+    submittingSubId = null;
+    btn.disabled = false;
+    btn.textContent = "Submit Query";
+  }
+}
+
+function compareResults(user, reference, subId) {
+  const userCols = user.columns || [];
+  const refCols = reference.columns || [];
+  const userRows = user.rows || [];
+  const refRows = reference.rows || [];
+
+  const issues = [];
+  let status = "correct";
+
+  // 1. Column count check
+  if (userCols.length !== refCols.length) {
+    status = "incorrect";
+    issues.push(`Column count differs: your query returned ${userCols.length} column(s), expected ${refCols.length}.`);
+  }
+
+  // 2. Row count check
+  if (userRows.length !== refRows.length) {
+    status = "incorrect";
+    issues.push(`Row count differs: your query returned ${userRows.length} row(s), expected ${refRows.length}.`);
+  }
+
+  // 3. Value comparison (order-insensitive unless the sub-exercise requires order)
+  if (userRows.length === refRows.length && userCols.length === refCols.length) {
+    const ordered = requiresOrder(subId);
+    let valueIssues = [];
+    if (ordered) {
+      // Compare row-by-row in order
+      for (let i = 0; i < refRows.length; i++) {
+        const diffs = rowDiff(userRows[i], refRows[i], refCols);
+        if (diffs.length) valueIssues.push({ row: i, diffs });
+      }
+    } else {
+      // Order-insensitive: build multiset comparison
+      const refMultiset = new Map();
+      for (const row of refRows) {
+        const key = rowKey(row);
+        refMultiset.set(key, (refMultiset.get(key) || 0) + 1);
+      }
+      const userMultiset = new Map();
+      for (const row of userRows) {
+        const key = rowKey(row);
+        userMultiset.set(key, (userMultiset.get(key) || 0) + 1);
+      }
+      // Find rows in user but not in ref (or extra)
+      for (const [key, count] of userMultiset) {
+        const refCount = refMultiset.get(key) || 0;
+        if (count > refCount) {
+          valueIssues.push({ row: -1, diffs: [`Unexpected row (or extra duplicate): [${rowDisplay(key)}] ×${count - refCount}`] });
+        }
+      }
+      // Find rows in ref but not in user
+      for (const [key, count] of refMultiset) {
+        const userCount = userMultiset.get(key) || 0;
+        if (count > userCount) {
+          valueIssues.push({ row: -1, diffs: [`Missing row (or missing duplicate): [${rowDisplay(key)}] ×${count - userCount}`] });
+        }
+      }
+    }
+    if (valueIssues.length > 0) {
+      status = "incorrect";
+      const shown = valueIssues.slice(0, 5);
+      for (const vi of shown) {
+        if (vi.row >= 0) {
+          issues.push(`Row ${vi.row + 1}: ` + vi.diffs.join("; "));
+        } else {
+          issues.push(vi.diffs.join("; "));
+        }
+      }
+      if (valueIssues.length > 5) issues.push(`…and ${valueIssues.length - 5} more difference(s).`);
+    }
+  }
+
+  // 4. Truncation warning
+  if (user.truncated) issues.push("Your result was truncated at 10,000 rows. The comparison may be incomplete.");
+  if (reference.truncated) issues.push("Reference result was truncated at 10,000 rows.");
+
+  const summary = status === "correct"
+    ? "Your query result matches the reference."
+    : issues.join(" ");
+
+  return { status, summary, details: issues, refCols, userCols, refRowCount: refRows.length, userRowCount: userRows.length };
+}
+
+function requiresOrder(subId) {
+  // Check if the sub-exercise's expected output specifies a non-trivial sort order
+  const entry = SUB_MAP[subId];
+  if (!entry) return false;
+  const so = entry.sub.expectedOutput.sortOrder || "";
+  // "N/A" means no ordering requirement
+  if (so === "N/A" || so === "n/a" || so === "") return false;
+  return true;
+}
+
+function rowKey(row) {
+  // Use \u0000 as the null marker and \u001F (unit separator) between cells.
+  return row.map(v => v === null ? "\u0000NULL\u0000" : String(v)).join("\u001F");
+}
+
+function rowDisplay(key) {
+  return key.split("\u001F").map(v => v === "\u0000NULL\u0000" ? "NULL" : v).join(", ");
+}
+
+function rowDiff(userRow, refRow, refCols) {
+  const diffs = [];
+  for (let i = 0; i < refCols.length; i++) {
+    const u = userRow[i];
+    const r = refRow[i];
+    if (valuesEqual(u, r)) continue;
+    diffs.push(`${refCols[i]}: got ${fmtVal(u)}, expected ${fmtVal(r)}`);
+  }
+  return diffs;
+}
+
+function valuesEqual(a, b) {
+  // Both null
+  if (a == null && b == null) return true;
+  if (a == null || b == null) return false;
+  // Numeric comparison: if both can be parsed as numbers, compare with tolerance
+  const na = Number(a), nb = Number(b);
+  if (!isNaN(na) && !isNaN(nb) && a !== "" && b !== "") {
+    // Use a small relative tolerance for floating-point ROUND() results
+    const diff = Math.abs(na - nb);
+    const maxVal = Math.max(Math.abs(na), Math.abs(nb), 1);
+    return diff <= 0.005 * maxVal;  // 0.5% relative tolerance for rounded values
+  }
+  // String comparison
+  return String(a) === String(b);
+}
+
+function fmtVal(v) {
+  if (v == null) return "NULL";
+  return String(v);
+}
+
+function displayValidation(subId, result, data) {
+  const banner = document.getElementById("validationBanner");
+  if (!banner) return;
+  const cls = result.status === "correct" || result.status === "technique" ? "correct" : result.status === "incorrect" ? "incorrect" : "error";
+  const icon = result.status === "correct" ? "✓" : result.status === "technique" ? "✓" : "✗";
+  banner.className = "validation-banner visible " + cls;
+  let html = `<div class="vb-head"><span class="vb-icon">${icon}</span> ${VALIDATION_LABELS[result.status] || result.status}</div>`;
+  html += `<div class="vb-detail">${esc(result.summary)}</div>`;
+  if (result.techniqueNote) {
+    html += `<div class="vb-detail" style="margin-top:6px;font-size:12px;color:var(--text-secondary);">Your result is correct, but the requirements ask for a specific technique that does not appear in your query: ${esc(result.techniqueNote)}. Consider rewriting to use the required technique.</div>`;
+  }
+  if (result.status === "incorrect" && result.details.length) {
+    html += `<div class="vb-detail" style="margin-top:8px;font-size:12px;color:var(--text-secondary);">` +
+      `<strong>Diagnostics:</strong><br>` +
+      result.details.slice(0, 8).map(d => "• " + esc(d)).join("<br>") +
+      (result.details.length > 8 ? "<br>…and more." : "") + `</div>`;
+  }
+  if (data && data.elapsed_ms) {
+    html += `<div style="margin-top:6px;font-size:11px;color:var(--text-muted);">Executed in ${data.elapsed_ms} ms. Your result: ${data.user.rowCount} row(s) × ${data.user.columns.length} col(s). Reference: ${data.reference.rowCount} row(s) × ${data.reference.columns.length} col(s).</div>`;
+  }
+  banner.innerHTML = html;
+}
+
+function restoreValidationBanner(subId) {
+  const banner = document.getElementById("validationBanner");
+  if (!banner) return;
+  const v = state.validation[subId];
+  if (!v) return;
+  const cls = v.status === "correct" ? "correct" : v.status === "incorrect" ? "incorrect" : v.status === "error" ? "error" : "unavailable";
+  const icon = v.status === "correct" ? "✓" : v.status === "incorrect" ? "✗" : "⚠";
+  banner.className = "validation-banner visible " + cls;
+  banner.innerHTML = `<div class="vb-head"><span class="vb-icon">${icon}</span> ${VALIDATION_LABELS[v.status] || v.status} <span style="font-weight:400;font-size:11px;color:var(--text-muted);">(last submitted ${new Date(v.at).toLocaleString()})</span></div><div class="vb-detail">${esc(v.message || "")}</div>`;
+}
+
+function onSearchInput(val) { state.filters.search = val; renderExerciseList(); }
+function onFilterChange() {
+  state.filters.difficulty = document.getElementById("filterDifficulty")?.value||"";
+  state.filters.category = document.getElementById("filterCategory")?.value||"";
+  state.filters.status = document.getElementById("filterStatus")?.value||"";
+  renderExerciseList();
+}
+
+function renderExerciseList() {
+  const container = document.getElementById("exerciseList");
+  if (!container) return;
+  const filtered = getFilteredSubs();
+  if (filtered.length===0) {
+    container.innerHTML = `<div class="empty-state"><h3>No sub-exercises match your filters</h3><p>Try adjusting the search or filter criteria.</p></div>`;
+    return;
+  }
+  const grouped = {};
+  for (const {sub,parent} of filtered) {
+    if (!grouped[parent.id]) grouped[parent.id]={parent,subs:[]};
+    grouped[parent.id].subs.push(sub);
+  }
+  let html = "";
+  for (const pid in grouped) {
+    const {parent,subs} = grouped[pid];
+    const pp = getParentProgress(parent);
+    html += `<div style="margin-bottom:12px;"><div style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;"><span class="badge badge-${parent.difficulty.toLowerCase()}">${parent.difficulty}</span> ${esc(parent.title)} <span style="font-size:11px;color:var(--text-muted);">(${pp.done}/${pp.total})</span></div>`;
+    for (const s of subs) {
+      const status = state.completed[s.id]?"completed":(state.answers[s.id]&&state.answers[s.id].trim()?"saved":"pending");
+      const label = state.completed[s.id]?"Completed":(state.answers[s.id]&&state.answers[s.id].trim()?"Saved":"Not started");
+      html += `<div class="sub-list-item" onclick="navigateTo('${s.id}')"><span class="sub-num">${s.id.split('-s')[1]}</span><span class="sub-title">${esc(s.title)}</span><span class="sub-status ${status}">${label}</span></div>`;
+    }
+    html += `</div>`;
+  }
+  container.innerHTML = html;
+}
+
+/* ============================================================
+   IMPORT / EXPORT / RESET
+   ============================================================ */
+function exportProgress() {
+  const data = { exportedAt: new Date().toISOString(), version: 2, answers: state.answers, notes: state.notes, completed: state.completed, validation: state.validation };
+  const blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "gayanara_sql_progress_"+new Date().toISOString().slice(0,10)+".json";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast("Progress exported as JSON.","success");
+}
+
+function importProgress() {
+  const input = document.createElement("input");
+  input.type="file"; input.accept=".json,application/json";
+  input.onchange = function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!data||typeof data!=="object") throw new Error("Invalid");
+        if (data.answers&&typeof data.answers==="object") state.answers = data.answers;
+        if (data.notes&&typeof data.notes==="object") state.notes = data.notes;
+        if (data.completed&&typeof data.completed==="object") state.completed = data.completed;
+        if (data.validation&&typeof data.validation==="object") state.validation = data.validation;
+        saveState(); renderSidebar();
+        if (state.currentView==="dashboard") renderDashboard();
+        else if (SUB_MAP[state.currentView]) renderSub(state.currentView);
+        else if (PARENTS.find(p=>p.id===state.currentView)) renderParent(state.currentView);
+        else renderDashboard();
+        showToast("Progress imported successfully.","success");
+      } catch(err) {
+        showToast("Import failed: file does not contain valid progress data.","error");
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function resetAllProgress() {
+  if (!confirm("Reset ALL progress? All answers, notes, completion statuses, and validation results will be deleted. This cannot be undone.")) return;
+  state.answers={}; state.notes={}; state.completed={}; state.validation={};
+  saveState(); renderSidebar();
+  if (state.currentView==="dashboard") renderDashboard();
+  else if (SUB_MAP[state.currentView]) renderSub(state.currentView);
+  else renderDashboard();
+  showToast("All progress has been reset.","success");
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+function init() {
+  loadState();
+  renderSidebar();
+  renderDashboard();
+}
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
