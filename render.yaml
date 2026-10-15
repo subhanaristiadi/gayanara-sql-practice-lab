@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: gayanara-sql-practice-lab-api-subhan
+    runtime: python
+    region: singapore
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn server:app --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 35
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: DATABASE_URL
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://subhanaristiadi.github.io
+      - key: REQUIRE_NON_SUPERUSER
+        value: "true"
+      - key: MAX_ROWS
+        value: "5000"
+      - key: STATEMENT_TIMEOUT_MS
+        value: "10000"
+      - key: LOCK_TIMEOUT_MS
+        value: "2000"
