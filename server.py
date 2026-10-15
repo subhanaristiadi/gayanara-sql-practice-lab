@@ -238,27 +238,61 @@ def execute_readonly_query(sql: str) -> dict[str, Any]:
             setup_cursor.execute(f"SET LOCAL lock_timeout = '{LOCK_TIMEOUT_MS}ms'")
             setup_cursor.execute("SET LOCAL idle_in_transaction_session_timeout = '15000ms'")
 
-        # A named cursor fetches in batches instead of buffering an unbounded
-        # result set in the application process.
+              # A named cursor streams result rows in batches.
+        # Fetch the first row before reading column metadata.
         cursor = conn.cursor(name=f"gayanara_{uuid.uuid4().hex}")
         cursor.itersize = 100
         cursor.execute(sql)
-        columns = [description[0] for description in (cursor.description or [])]
-        if not columns:
-            raise QueryRejected("The query did not return a result table. Submit a SELECT query.")
 
-        while len(rows) < MAX_ROWS:
+        first_row = cursor.fetchone()
+        columns = [
+            description[0]
+            for description in (cursor.description or [])
+        ]
+
+        if not columns:
+            raise QueryRejected(
+                "The query did not return a result table. Submit a SELECT query."
+            )
+
+        if first_row is not None:
+            safe_row = [_json_value(value) for value in first_row]
+            row_bytes = len(
+                json.dumps(
+                    safe_row,
+                    ensure_ascii=False,
+                    separators=(",", ":"),
+                ).encode("utf-8")
+            )
+
+            if bytes_used + row_bytes > MAX_RESULT_BYTES:
+                truncated = True
+            else:
+                rows.append(safe_row)
+                bytes_used += row_bytes
+
+        while not truncated and len(rows) < MAX_ROWS:
             batch = cursor.fetchmany(min(100, MAX_ROWS - len(rows)))
             if not batch:
                 break
+
             for raw_row in batch:
                 safe_row = [_json_value(value) for value in raw_row]
-                row_bytes = len(json.dumps(safe_row, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))
+                row_bytes = len(
+                    json.dumps(
+                        safe_row,
+                        ensure_ascii=False,
+                        separators=(",", ":"),
+                    ).encode("utf-8")
+                )
+
                 if bytes_used + row_bytes > MAX_RESULT_BYTES:
                     truncated = True
                     break
+
                 rows.append(safe_row)
                 bytes_used += row_bytes
+
             if truncated:
                 break
 
