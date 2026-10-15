@@ -2,6 +2,14 @@
 
 An interactive SQL practice website built around the **Gayanara** dataset, a simulated Indonesian online fashion store from Ngulik Data. Exercises progress from foundational SQL to joins, CTEs, window functions, customer analytics, and data-quality checks.
 
+## Dataset Source
+
+The Gayanara dataset was sourced from **Ngulik Data**. It represents a simulated Indonesian online fashion store and is used for SQL practice and business analytics.
+
+**Original dataset:** [Gayanara — Ngulik Data](https://ngulikdata.com/datasets/gayanara)
+
+All analysis in this project is based on the dataset provided for this project. Business interpretations and findings are limited to the available data and documented business rules.
+
 ## Live Demo
 
 - **Website:** https://subhanaristiadi.github.io/gayanara-sql-practice-lab/
