@@ -155,6 +155,25 @@ a:hover { text-decoration: underline; }
 .btn-danger:hover { background: #fef2f2; }
 .btn-sm { padding: 5px 10px; font-size: 12px; }
 
+
+/* Live query results */
+.query-results-panel{margin-top:20px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card-bg);overflow:hidden}
+.query-results-header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:16px 20px;border-bottom:1px solid var(--border)}
+.query-results-header h4{font-size:15px;margin:0}
+.query-results-meta{color:var(--text-secondary);font-size:12px}
+.query-results-wrap{overflow:auto;max-height:440px}
+.query-results-table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap}
+.query-results-table th{position:sticky;top:0;z-index:1;background:#f1f5f9;text-align:left;font-weight:700}
+.query-results-table th,.query-results-table td{padding:9px 12px;border-bottom:1px solid var(--border)}
+.query-results-table td.null-value{color:#92400e;font-style:italic}
+.query-results-empty{padding:26px 18px;text-align:center;color:var(--text-muted);font-size:13px}
+.query-results-note{padding:9px 16px;border-top:1px solid var(--border);font-size:12px;color:var(--text-secondary);background:#fafbfc}
+.query-status-banner{margin-top:12px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;white-space:pre-wrap}
+.query-status-banner.success{background:#f0fdf4;border-color:#bbf7d0;color:#166534}
+.query-status-banner.error{background:#fef2f2;border-color:#fecaca;color:#991b1b}
+.query-status-banner.info{background:#f8fafc;color:var(--text-secondary)}
+.query-results-spinner{display:inline-block;width:11px;height:11px;margin-right:6px;border:2px solid var(--accent);border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;vertical-align:-1px}
+
 /* Completion control */
 .completion-control { display: flex; align-items: center; gap: 8px; margin-top: 12px; padding: 12px; background: #f8fafc; border-radius: var(--radius); border: 1px solid var(--border); }
 .completion-control input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--success); cursor: pointer; }
@@ -1004,7 +1023,7 @@ const OLD_STORAGE_KEY = "gayanara_sql_practice_lab_v1";
 
 // Backend base URL — empty means "auto-detect" (try localhost:8765, then report unavailable).
 // Set explicitly if the backend runs on a different port or host.
-const BACKEND_BASE = "https://gayanara-sql-practice-lab-api-subhan.onrender.com";  // e.g. "http://127.0.0.1:8765"
+const BACKEND_BASE = "";  // e.g. "http://127.0.0.1:8765"
 
 let state = {
   answers: {},
@@ -1421,19 +1440,34 @@ function renderSub(subId) {
             <thead><tr>${sub.expectedOutput.columns.map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead>
             <tbody><tr>${sub.expectedOutput.columns.map((c,i)=>`<td class="placeholder">${esc(sub.expectedOutput.columnNotes[i]||"Your query result")}</td>`).join("")}</tr></tbody>
           </table>
-          <div class="expected-table-meta">Grain: ${esc(sub.expectedOutput.grain)} | Sort: ${esc(sub.expectedOutput.sortOrder)} | <em>Schema-only specification. Execute your query in pgAdmin 4 for actual results.</em></div>
+          <div class="expected-table-meta">Grain: ${esc(sub.expectedOutput.grain)} | Sort: ${esc(sub.expectedOutput.sortOrder)} | <em>Schema-only specification. Run your query below to view actual database results.</em></div>
         </div>
 
         <div class="sql-editor">
           <label for="sqlEditor">Your SQL Answer</label>
           <textarea id="sqlEditor" placeholder="-- Write your PostgreSQL query here" spellcheck="false">${esc(state.answers[sub.id]||"")}</textarea>
           <div class="sql-actions">
-            <button class="btn btn-primary" id="submitBtn" onclick="submitQuery('${sub.id}')">Submit Query</button>
+            <button class="btn btn-primary" id="runQueryBtn" onclick="runUserQuery('${sub.id}')">Run Query</button>
+            <button class="btn btn-primary" id="submitBtn" onclick="submitQuery('${sub.id}')">Validate Answer</button>
             <button class="btn btn-primary" onclick="copyAnswer('${sub.id}')">Copy SQL</button>
             <button class="btn" onclick="saveAnswer('${sub.id}')">Save Answer</button>
             <button class="btn btn-danger" onclick="resetAnswer('${sub.id}')">Reset</button>
           </div>
           <div class="validation-banner" id="validationBanner" role="status" aria-live="polite"></div>
+        </div>
+
+        <section class="query-results-panel" aria-live="polite">
+          <div class="query-results-header">
+            <h4>Query Results</h4>
+            <span class="query-results-meta" id="queryResultsMeta">No query executed yet</span>
+          </div>
+          <div class="query-results-wrap" id="queryResults">
+            <div class="query-results-empty">Run your SELECT query to see the rows returned by the Gayanara PostgreSQL database.</div>
+          </div>
+          <div class="query-results-note">Results are generated live from the database. Large result sets may be truncated for safety and performance.</div>
+        </section>
+        <div class="query-status-banner info" id="queryStatus" role="status" aria-live="polite">Ready to run a query.</div>
+
           <div class="completion-control">
             <input type="checkbox" id="completeChk" ${state.completed[sub.id]?"checked":""} onchange="toggleComplete('${sub.id}',this.checked)" aria-label="Mark complete">
             <label for="completeChk">Mark as completed</label>
@@ -1470,7 +1504,7 @@ function renderSub(subId) {
   const editor = document.getElementById("sqlEditor");
   if (editor) {
     editor.addEventListener("keydown", function(e) {
-      if ((e.ctrlKey||e.metaKey) && e.key==="Enter") { e.preventDefault(); saveAnswer(sub.id); }
+      if ((e.ctrlKey||e.metaKey) && e.key==="Enter") { e.preventDefault(); runUserQuery(sub.id); }
     });
   }
   // Restore last validation banner state for this sub-exercise
@@ -1584,6 +1618,111 @@ function getBackendBase() {
   return "http://127.0.0.1:8765";
 }
 
+
+async function runUserQuery(subId) {
+  if (submittingSubId) return;
+  const editor = document.getElementById("sqlEditor");
+  const runBtn = document.getElementById("runQueryBtn");
+  const status = document.getElementById("queryStatus");
+  const results = document.getElementById("queryResults");
+  const meta = document.getElementById("queryResultsMeta");
+  if (!editor || !runBtn || !status || !results || !meta) return;
+  const sql = editor.value.trim();
+  if (!sql) {
+    status.className = "query-status-banner error";
+    status.textContent = "Enter a SELECT query before running it.";
+    return;
+  }
+  submittingSubId = subId;
+  runBtn.disabled = true;
+  runBtn.textContent = "Running query…";
+  status.className = "query-status-banner info";
+  status.textContent = "Executing your query against the Gayanara PostgreSQL database…";
+  results.textContent = "Running query…";
+  meta.textContent = "Executing…";
+  try {
+    const response = await fetch(getBackendBase() + "/api/query", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({sql})
+    });
+    const data = await response.json().catch(() => ({error:"Invalid response from query service."}));
+    if (!response.ok) {
+      const detail = data.detail ? "\n" + data.detail : "";
+      throw new Error((data.error || "Query failed (HTTP " + response.status + ").") + detail);
+    }
+    renderQueryResults(data);
+    status.className = "query-status-banner success";
+    status.textContent = data.truncated
+      ? "Query executed successfully. Displayed results were truncated by the server limit."
+      : "Query executed successfully.";
+    state.answers[subId] = sql;
+    saveState();
+    renderSidebar();
+  } catch (error) {
+    results.textContent = "No results available. Fix the SQL or check the database connection and try again.";
+    meta.textContent = "Query failed";
+    status.className = "query-status-banner error";
+    status.textContent = error.message || "Query execution failed.";
+  } finally {
+    submittingSubId = null;
+    runBtn.disabled = false;
+    runBtn.textContent = "Run Query";
+  }
+}
+
+function renderQueryResults(data) {
+  const wrap = document.getElementById("queryResults");
+  const meta = document.getElementById("queryResultsMeta");
+  if (!wrap || !meta) return;
+  const columns = Array.isArray(data.columns) ? data.columns : [];
+  const rows = Array.isArray(data.rows) ? data.rows : [];
+  wrap.replaceChildren();
+  if (!columns.length) {
+    wrap.textContent = "The query did not return a result table.";
+    meta.textContent = "No result columns";
+    return;
+  }
+  const table = document.createElement("table");
+  table.className = "query-results-table";
+  const thead = document.createElement("thead");
+  const header = document.createElement("tr");
+  columns.forEach(col => {
+    const th = document.createElement("th");
+    th.textContent = String(col);
+    header.appendChild(th);
+  });
+  thead.appendChild(header);
+  table.appendChild(thead);
+  const tbody = document.createElement("tbody");
+  rows.forEach(row => {
+    const tr = document.createElement("tr");
+    columns.forEach((_, i) => {
+      const td = document.createElement("td");
+      const value = Array.isArray(row) ? row[i] : null;
+      if (value === null || value === undefined) {
+        td.textContent = "NULL";
+        td.className = "null-value";
+      } else if (typeof value === "object") td.textContent = JSON.stringify(value);
+      else td.textContent = String(value);
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+  if (!rows.length) {
+    const empty = document.createElement("div");
+    empty.className = "query-results-empty";
+    empty.textContent = "Query executed successfully: zero rows returned.";
+    wrap.appendChild(empty);
+  }
+  const count = Number.isFinite(Number(data.rowCount)) ? Number(data.rowCount) : rows.length;
+  const elapsed = Number.isFinite(Number(data.elapsed_ms)) ? Number(data.elapsed_ms) : null;
+  meta.textContent = count.toLocaleString() + " rows · " + columns.length + " columns" +
+    (elapsed === null ? "" : " · " + elapsed + " ms") + (data.truncated ? " · truncated" : "");
+}
+
 async function submitQuery(subId) {
   if (submittingSubId) return;  // prevent concurrent submissions
   const editor = document.getElementById("sqlEditor");
@@ -1616,7 +1755,7 @@ async function submitQuery(subId) {
     const resp = await fetch(getBackendBase() + "/validate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_sql: sql, sub_id: subId })
+      body: JSON.stringify({ user_sql: sql, ref_sql: refSql })
     });
 
     if (!resp.ok) {
