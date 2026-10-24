@@ -81,6 +81,21 @@ a:hover { text-decoration: underline; }
 .page-header { margin-bottom: 24px; }
 .page-header h2 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
 .page-header .subtitle { font-size: 14px; color: var(--text-secondary); }
+
+.dataset-source {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+.dataset-source a {
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: none;
+}
+.dataset-source a:hover {
+    text-decoration: underline;
+}
+
 .breadcrumb { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
 .breadcrumb a { cursor: pointer; }
 
@@ -1023,7 +1038,7 @@ const OLD_STORAGE_KEY = "gayanara_sql_practice_lab_v1";
 
 // Backend base URL — empty means "auto-detect" (try localhost:8765, then report unavailable).
 // Set explicitly if the backend runs on a different port or host.
-const BACKEND_BASE = "https://gayanara-sql-practice-lab-api-subhan.onrender.com";  // e.g. "http://127.0.0.1:8765"
+const BACKEND_BASE = "";  // e.g. "http://127.0.0.1:8765"
 
 let state = {
   answers: {},
@@ -1249,6 +1264,12 @@ function renderDashboard() {
     <div class="page-header">
       <h2>Dashboard</h2>
       <div class="subtitle">Your Gayanara SQL practice workspace. ${pr.total} sub-exercises across ${PARENTS.length} parent topics.</div>
+      <div class="dataset-source">
+        Dataset Source:
+        <a href="https://subhanaristiadi.github.io/gayanara-sql-practice-lab/"
+           target="_blank"
+           rel="noopener noreferrer">Ngulikdata</a>
+      </div>
     </div>
     <div class="toolbar">
       <button class="btn" onclick="exportProgress()">Export Progress (JSON)</button>
