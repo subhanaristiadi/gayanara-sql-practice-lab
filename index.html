@@ -330,6 +330,13 @@ const PARENTS = [
         requirements: ["GROUP BY the raw category column (no CASE or TRIM)","Count products per category","Order by product_count DESC, then category"],
         expectedOutput: { columns: ["category","product_count"], columnNotes: ["Original category value (may be inconsistent, e.g. 'Dress' vs 'dress')","Number of products in that category"], grain: "One row per distinct raw category value", sortOrder: "product_count DESC, category ASC" },
         metricDefs: "This shows the raw distribution before any normalization. Inconsistent values (different casing, Indonesian/English names) are expected."
+      },
+      {
+        id: "ex-01-s4", title: "Missing Values Across Every Column",
+        question: "Profile missing values for every column in all five source tables.",
+        requirements: ["Use PostgreSQL row-to-JSON conversion and jsonb_each to inspect each column","Report table name, column name, row count, and missing count","Treat JSON null as missing; do not count the literal text 'NULL' as SQL NULL","Order results by table and column"],
+        expectedOutput: { columns: ["table_name","column_name","row_count","missing_count","missing_pct"], columnNotes: ["table name","column name","row count","missing count","missing pct"], grain: "One row per column across all five tables", sortOrder: "See SQL ORDER BY" },
+        metricDefs: "Missing = SQL NULL represented as JSON null. Missing percentage = missing_count / row_count × 100."
       }
     ]
   },
@@ -415,6 +422,13 @@ const PARENTS = [
         requirements: ["Use DATE_TRUNC('month', order_date)::DATE for calendar months","Separate CTEs for orders/revenue (from orders table) and units (from order_items)","Join the two CTEs on month","Use LAG() OVER (ORDER BY month) for previous month values","Calculate revenue_mom_pct and orders_mom_pct as (current - prev) / prev × 100, 2 dp","First month will have NULL MoM values (expected)"],
         expectedOutput: { columns: ["month","orders","revenue_idr","units_sold","aov_idr","prev_month_revenue_idr","revenue_mom_pct","orders_mom_pct"], columnNotes: ["Calendar month (YYYY-MM-01)","Valid order count","Sum of total_amount_idr","Units from valid orders' items","AOV, 2 dp","Previous month revenue (NULL for first)","MoM revenue %, 2 dp (NULL first)","MoM orders %, 2 dp (NULL first)"], grain: "One row per calendar month", sortOrder: "month ASC" },
         metricDefs: "Valid orders: exclude cancelled/returned. MoM %: (current - previous) / previous × 100. LAG returns NULL for the first month."
+      },
+      {
+        id: "ex-04-s2", title: "Peak Month by Revenue, Orders, and Units",
+        question: "Identify the calendar month with the highest valid revenue, and report its valid order count and units sold.",
+        requirements: ["Exclude cancelled and returned orders","Use orders.total_amount_idr for monthly revenue","Aggregate order_items quantity separately at month grain before combining","Return month, revenue, valid orders, units sold; define how ties are handled"],
+        expectedOutput: { columns: ["month","revenue_idr","valid_orders","units_sold"], columnNotes: ["month","revenue idr","valid orders","units sold"], grain: "One row for the highest-revenue month (ties may return multiple rows)", sortOrder: "See SQL ORDER BY" },
+        metricDefs: "Valid order excludes cancelled/returned. Revenue is SUM(orders.total_amount_idr); units are SUM(order_items.quantity) for valid orders."
       }
     ]
   },
@@ -455,6 +469,13 @@ const PARENTS = [
         requirements: ["Use ALL orders (no status filter)","GROUP BY order_status","Calculate COUNT and share % using SUM(COUNT(*)) OVER () window","Order by orders DESC"],
         expectedOutput: { columns: ["order_status","orders","order_share_pct"], columnNotes: ["Status value (delivered, shipped, processing, cancelled, returned)","Order count","% of total, 2 dp (window denominator)"], grain: "One row per distinct order_status (5 rows)", sortOrder: "orders DESC" },
         metricDefs: "This uses ALL orders, not just valid ones. Denominator for share = total orders across all statuses."
+      },
+      {
+        id: "ex-05-s5", title: "City Revenue Contribution",
+        question: "Measure valid-order revenue contribution by shipping city and province.",
+        requirements: ["Use shipping_city and shipping_province, not customer profile location","Exclude cancelled and returned orders","Calculate city revenue and percentage of total valid revenue","Keep the denominator as total valid-order revenue across all locations"],
+        expectedOutput: { columns: ["shipping_city","shipping_province","valid_orders","revenue_idr","revenue_contribution_pct"], columnNotes: ["shipping city","shipping province","valid orders","revenue idr","revenue contribution pct"], grain: "One row per shipping city/province pair", sortOrder: "See SQL ORDER BY" },
+        metricDefs: "Contribution % = location valid revenue / total valid revenue × 100. Revenue uses orders.total_amount_idr."
       }
     ]
   },
@@ -500,6 +521,13 @@ const PARENTS = [
         requirements: ["Same category normalization CTE","Aggregate to category level only (no sub_category or brand)","RANK() OVER (ORDER BY revenue_idr DESC)","Revenue contribution: 100 × category_revenue / SUM(revenue_idr) OVER (), 2 dp","Order by revenue_rank"],
         expectedOutput: { columns: ["category_normalized","units_sold","revenue_idr","revenue_rank","revenue_contribution_pct"], columnNotes: ["Normalized category","Units sold","Item revenue","Rank by revenue DESC","% of total revenue, 2 dp"], grain: "One row per normalized category", sortOrder: "revenue_rank ASC" },
         metricDefs: "Revenue contribution uses window SUM as denominator (all categories). RANK handles ties."
+      },
+      {
+        id: "ex-07-s3", title: "Brand Ranking by Revenue and Units",
+        question: "Rank brands by product-line revenue and units sold from valid orders.",
+        requirements: ["Exclude cancelled and returned orders","Use SUM(order_items.subtotal_idr) for brand revenue","Use SUM(order_items.quantity) for units sold","Show both revenue rank and unit rank"],
+        expectedOutput: { columns: ["brand","revenue_idr","units_sold","revenue_rank","units_rank"], columnNotes: ["brand","revenue idr","units sold","revenue rank","units rank"], grain: "One row per brand with sales", sortOrder: "See SQL ORDER BY" },
+        metricDefs: "Brand revenue uses item subtotals on valid orders; units sold uses item quantity. Rank metrics are independent."
       }
     ]
   },
@@ -519,6 +547,13 @@ const PARENTS = [
         requirements: ["CTE aggregating valid order_items to product level (SUM quantity)","LEFT JOIN products to sales CTE","COALESCE(units_sold, 0) for products with no sales","Flags: stock=0+sold>0→'Out of stock + sold'; stock≤20+sold>0→'Low stock + sold'; stock≥150+sold≤5→'High stock + low/no sales'; sold=0→'No recorded valid sales'","Exclude 'Other' from output","Order by CASE priority 1-4, units_sold DESC, stock DESC"],
         expectedOutput: { columns: ["product_id","name","category","brand","stock","units_sold","opportunity_flag"], columnNotes: ["Product ID","Name","Raw category","Brand","Current stock (snapshot)","Units sold (0 if none)","Flag string"], grain: "One row per product (excluding 'Other')", sortOrder: "Flag priority ASC, units_sold DESC, stock DESC" },
         metricDefs: "Stock is a current snapshot. Units: SUM(quantity) on valid orders. Thresholds: out of stock=0, low=≤20, high=≥150, low sales=≤5. These are analytical choices, not documented business rules."
+      },
+      {
+        id: "ex-08-s2", title: "High-Demand Products with Low Current Stock",
+        question: "Flag products with strong observed unit sales and low current stock for inventory review.",
+        requirements: ["Calculate valid units sold per product","Use current products.stock only as a snapshot","Make the chosen low-stock threshold explicit in SQL","Rank by units sold descending and do not infer historical stockout duration"],
+        expectedOutput: { columns: ["product_id","name","brand","units_sold","current_stock"], columnNotes: ["product id","name","brand","units sold","current stock"], grain: "One row per flagged product", sortOrder: "See SQL ORDER BY" },
+        metricDefs: "Valid units exclude cancelled/returned orders. Low current stock is an explicit review threshold, not a historical stockout measure."
       }
     ]
   },
@@ -545,6 +580,13 @@ const PARENTS = [
         requirements: ["Price bands: <250000, 250000-<500000, 500000-<750000, >=750000","LEFT JOIN products to sales CTE","GROUP BY price band","Calculate: COUNT(*) as products, ROUND(AVG(units),2), SUM(units)","Order by MIN(price_idr) to sort bands low-to-high"],
         expectedOutput: { columns: ["price_band","products","avg_units_sold_per_product","total_units_sold"], columnNotes: ["Band label","Product count in band","Avg units per product, 2 dp","Total units in band"], grain: "One row per price band (4 rows)", sortOrder: "MIN(price_idr) ASC (lowest band first)" },
         metricDefs: "Price bands use products.price_idr (current list price). Units from valid orders. This is a descriptive comparison, not a pricing recommendation."
+      },
+      {
+        id: "ex-09-s3", title: "Product Price Band Sales Summary",
+        question: "Compare product sales across price bands using current listed product price as the banding variable.",
+        requirements: ["Define price bands explicitly in the CASE expression","Use products.price_idr to assign a product to a band","Calculate units and product-line revenue only from valid orders","State that current listed price may differ from historical unit_price_idr"],
+        expectedOutput: { columns: ["price_band","products_sold","units_sold","product_revenue_idr"], columnNotes: ["price band","products sold","units sold","product revenue idr"], grain: "One row per defined price band", sortOrder: "See SQL ORDER BY" },
+        metricDefs: "Bands use current products.price_idr; revenue uses order_items.subtotal_idr and units use quantity on valid orders. This is descriptive, not causal."
       }
     ]
   },
@@ -571,6 +613,27 @@ const PARENTS = [
         requirements: ["Aggregate valid orders per customer (count, revenue)","RANK() OVER for revenue DESC and order_count DESC","combined_rank_score = revenue_rank + order_rank","ORDER BY combined_rank_score ASC, customer_id ASC","LIMIT 25"],
         expectedOutput: { columns: ["customer_id","order_count","revenue_idr","revenue_rank","order_rank","combined_rank_score"], columnNotes: ["Customer ID","Valid order count","Total valid revenue (IDR)","Rank by revenue","Rank by orders","Sum of both ranks (lower=better)"], grain: "One row per customer (top 25)", sortOrder: "combined_rank_score ASC, customer_id ASC, LIMIT 25" },
         metricDefs: "Combined score is a simple rank-based approach (not weighted or normalized). Lower score = better performer on both dimensions simultaneously."
+      },
+      {
+        id: "ex-10-s3", title: "Revenue and Buying Customers by Gender and Age Group",
+        question: "Compare valid-order revenue, order volume, AOV, and buying-customer count by customer gender and age group.",
+        requirements: ["Exclude cancelled and returned orders","Count distinct customers with at least one valid order","Calculate revenue from orders.total_amount_idr","Avoid counting customers multiple times due to multiple orders"],
+        expectedOutput: { columns: ["gender","age_group","buying_customers","valid_orders","revenue_idr","aov_idr"], columnNotes: ["gender","age group","buying customers","valid orders","revenue idr","aov idr"], grain: "One row per gender and age-group combination represented by valid buyers", sortOrder: "See SQL ORDER BY" },
+        metricDefs: "Buying customers = distinct customers with valid orders. AOV = valid revenue / valid orders. Revenue is order-level."
+      },
+      {
+        id: "ex-10-s4", title: "Purchases by Customer Profile City and Province",
+        question: "Identify customer profile cities and provinces associated with the most valid purchasing activity.",
+        requirements: ["Use customers.city and customers.province for profile location","Exclude cancelled and returned orders","Report buying customers, valid orders, and valid revenue","Do not treat customer profile location as the order shipping destination"],
+        expectedOutput: { columns: ["customer_city","customer_province","buying_customers","valid_orders","revenue_idr"], columnNotes: ["customer city","customer province","buying customers","valid orders","revenue idr"], grain: "One row per customer profile city/province pair", sortOrder: "See SQL ORDER BY" },
+        metricDefs: "Location comes from customers profile fields, not orders shipping fields. Valid sales exclude cancelled/returned orders."
+      },
+      {
+        id: "ex-10-s5", title: "High-Value Customer Ranking and Revenue Contribution",
+        question: "Rank customers by valid revenue and order count and show each customer's contribution to valid revenue.",
+        requirements: ["Aggregate valid orders to one row per customer before ranking","Use orders.total_amount_idr for revenue","Calculate revenue contribution against total valid revenue","Use deterministic ordering for ties"],
+        expectedOutput: { columns: ["customer_id","name","valid_orders","revenue_idr","revenue_contribution_pct","revenue_rank"], columnNotes: ["customer id","name","valid orders","revenue idr","revenue contribution pct","revenue rank"], grain: "One row per customer with at least one valid order", sortOrder: "See SQL ORDER BY" },
+        metricDefs: "Customer revenue is SUM(orders.total_amount_idr) from valid orders. Contribution denominator is total valid revenue; rank is based on revenue."
       }
     ]
   },
@@ -635,6 +698,20 @@ const PARENTS = [
         requirements: ["CASE WHEN promo_code IS NULL THEN 'No promo' ELSE 'Promo used'","Valid orders only","Per group: COUNT, SUM, AVG (rounded 2 dp), SUM(COALESCE(discount,0))","ORDER BY group name"],
         expectedOutput: { columns: ["promo_group","valid_orders","revenue_idr","aov_idr","discount_idr"], columnNotes: ["'No promo' or 'Promo used'","Valid order count","Revenue sum","AOV, 2 dp","Total discount given"], grain: "Two rows", sortOrder: "promo_group ASC" },
         metricDefs: "This is a two-group descriptive comparison. AOV difference does not prove the promo caused the difference (observational data)."
+      },
+      {
+        id: "ex-13-s3", title: "Monthly Promo vs No-Promo Order Volume",
+        question: "Compare valid order volume and revenue for orders with and without a promo code by month.",
+        requirements: ["Promo usage means promo_code IS NOT NULL","Exclude cancelled and returned orders","Group by calendar month and promo-use flag","Do not describe differences as causal promo uplift"],
+        expectedOutput: { columns: ["month","promo_group","valid_orders","revenue_idr","aov_idr"], columnNotes: ["month","promo group","valid orders","revenue idr","aov idr"], grain: "One row per month and promo group", sortOrder: "See SQL ORDER BY" },
+        metricDefs: "Promo group is based on non-null promo_code. AOV = order revenue / order count. Observational comparison only."
+      },
+      {
+        id: "ex-13-s4", title: "Frequently Used Promo Codes with Lower AOV",
+        question: "Compare promo codes by usage volume and AOV to identify frequently used codes with comparatively low order value.",
+        requirements: ["Exclude cancelled and returned orders","Group by non-null promo_code","Report order count, revenue, AOV, and total discount","Sort by order count descending, then AOV ascending","Interpret as descriptive association, not promo effectiveness"],
+        expectedOutput: { columns: ["promo_code","valid_orders","revenue_idr","aov_idr","discount_amount_idr"], columnNotes: ["promo code","valid orders","revenue idr","aov idr","discount amount idr"], grain: "One row per promo code used on valid orders", sortOrder: "See SQL ORDER BY" },
+        metricDefs: "Promo usage = non-null promo_code. AOV = SUM(total_amount_idr) / COUNT(orders). Discount is reported separately and not subtracted again from revenue."
       }
     ]
   },
@@ -694,6 +771,20 @@ const PARENTS = [
         requirements: ["GROUP BY courier, shipping_province","HAVING COUNT(*) >= 10","Show: orders, returned, return_rate_pct","Order by return_rate_pct DESC, orders DESC"],
         expectedOutput: { columns: ["courier","shipping_province","orders","returned_orders","return_rate_pct"], columnNotes: ["Courier","Province","Orders in combination","Returned count","Return %, 2 dp"], grain: "One row per courier×province with ≥10 orders", sortOrder: "return_rate_pct DESC, orders DESC" },
         metricDefs: "Minimum 10 orders per combination for reliability. This identifies specific courier-province pairs with elevated return rates."
+      },
+      {
+        id: "ex-15-s4", title: "Order Status Mix by Courier",
+        question: "Compare order-status distribution and cancellation/return rates by courier.",
+        requirements: ["Include all order statuses in the status mix","Use all orders as the denominator for each courier's status share","Calculate cancellation and return rates separately with explicit denominators","Do not exclude cancelled/returned orders from this operational analysis"],
+        expectedOutput: { columns: ["courier","total_orders","delivered_orders","shipped_orders","processing_orders","cancelled_orders","returned_orders","cancel_rate_pct","return_rate_pct"], columnNotes: ["courier","total orders","delivered orders","shipped orders","processing orders","cancelled orders","returned orders","cancel rate pct","return rate pct"], grain: "One row per courier", sortOrder: "See SQL ORDER BY" },
+        metricDefs: "Status mix uses all orders. Cancellation rate = cancelled orders / all orders for courier; return rate = returned orders / all orders for courier."
+      },
+      {
+        id: "ex-15-s5", title: "High-Volume Cities with Elevated Return Rates",
+        question: "Find shipping destinations with meaningful order volume and comparatively high return rates.",
+        requirements: ["Use shipping city/province","Use all orders as the denominator for return rate","Set and disclose a minimum order-volume threshold","Report total orders, returned orders, and return rate","Treat findings as operational signals, not proof of a courier or location cause"],
+        expectedOutput: { columns: ["shipping_city","shipping_province","total_orders","returned_orders","return_rate_pct"], columnNotes: ["shipping city","shipping province","total orders","returned orders","return rate pct"], grain: "One row per qualifying shipping city/province", sortOrder: "See SQL ORDER BY" },
+        metricDefs: "Return rate = returned orders / all orders in the location. Minimum-volume threshold must be stated in SQL and the output interpretation."
       }
     ]
   },
@@ -734,6 +825,13 @@ const PARENTS = [
         requirements: ["JOIN products to reviews","GROUP BY product","HAVING COUNT(review_id) >= 5","Calculate: review_count, ROUND(AVG(rating),2), SUM(helpful_count)","Order by avg_review_rating ASC, review_count DESC"],
         expectedOutput: { columns: ["product_id","name","category","review_count","avg_review_rating","helpful_votes"], columnNotes: ["Product ID","Product name","Category","Review count","Avg rating, 2 dp","Total helpful votes"], grain: "One row per product with ≥5 reviews", sortOrder: "avg_review_rating ASC, review_count DESC" },
         metricDefs: "Minimum 5 reviews ensures the average is meaningful. Lowest rating first = products needing quality improvement. This is a priority list, not a final judgment."
+      },
+      {
+        id: "ex-16-s5", title: "Review Rating by Product Category and Brand",
+        question: "Compare review rating and review volume across product category and brand.",
+        requirements: ["Join reviews to products using product_id","Use reviews.rating as the review-level rating measure","Report review count and average rating","Preserve raw category values or explicitly document any normalization mapping"],
+        expectedOutput: { columns: ["category","brand","review_count","avg_review_rating","distinct_products_reviewed"], columnNotes: ["category","brand","review count","avg review rating","distinct products reviewed"], grain: "One row per raw category and brand combination", sortOrder: "See SQL ORDER BY" },
+        metricDefs: "Average rating is AVG(reviews.rating); denominator is non-null review ratings. Review volume is COUNT(review_id)."
       }
     ]
   },
@@ -824,6 +922,13 @@ const PARENTS = [
         requirements: ["GROUP BY courier, shipping_province","HAVING COUNT(*) >= 10","Calculate return_rate_pct (returned / total × 100, 2 dp)","Label as 'LOGISTICS_REVIEW'","Order by return_rate_pct DESC, orders DESC"],
         expectedOutput: { columns: ["courier","shipping_province","orders","returned_orders","return_rate_pct","action_signal"], columnNotes: ["Courier","Province","Orders (≥10)","Returned count","Return %, 2 dp","'LOGISTICS_REVIEW'"], grain: "One row per qualifying combination", sortOrder: "return_rate_pct DESC, orders DESC" },
         metricDefs: "Minimum 10 orders for reliability. Return rate uses ALL orders (not just valid). These are evidence tables for management review, not automated decisions."
+      },
+      {
+        id: "ex-20-s4", title: "Executive Capstone: Evidence for Three Priority Actions",
+        question: "Create a compact evidence table to support three management priorities across inventory, customer experience, and operations.",
+        requirements: ["Use explicit thresholds and show supporting metrics","Include product demand/current-stock, low-rating review volume, and location return-rate signals","Do not claim profitability, delivery SLA, causal promo uplift, or historical stockout duration","Explain that the final three actions require interpreting the evidence rather than treating a flag as a causal conclusion"],
+        expectedOutput: { columns: ["priority_area","evidence_item","supporting_metric","metric_value","interpretation_note"], columnNotes: ["priority area","evidence item","supporting metric","metric value","interpretation note"], grain: "Several evidence rows grouped by priority area", sortOrder: "See SQL ORDER BY" },
+        metricDefs: "This is a synthesis exercise. Product revenue uses valid-order item subtotals; review metrics use reviews; return rates use all orders as denominator. Thresholds must be documented."
       }
     ]
   }
@@ -1038,7 +1143,7 @@ const OLD_STORAGE_KEY = "gayanara_sql_practice_lab_v1";
 
 // Backend base URL — empty means "auto-detect" (try localhost:8765, then report unavailable).
 // Set explicitly if the backend runs on a different port or host.
-const BACKEND_BASE = "";  // e.g. "http://127.0.0.1:8765"
+const BACKEND_BASE = "https://gayanara-sql-practice-lab-api-subhan.onrender.com";  // Render API
 
 let state = {
   answers: {},

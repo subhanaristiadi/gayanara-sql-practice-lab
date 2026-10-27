@@ -19,7 +19,7 @@ The services are hosted separately: GitHub Pages serves the frontend, Render run
 
 ## What the app includes
 
-- 41 sub-exercises organized by topic and difficulty.
+- 56 sub-exercises organized by topic and difficulty.
 - Business questions, requirements, metric definitions, and expected output specifications.
 - A SQL editor that can run a query and display its result in a table.
 - Automatic comparison of submitted exercise answers with reference results.
