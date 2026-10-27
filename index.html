@@ -585,7 +585,7 @@ const PARENTS = [
         id: "ex-09-s3", title: "Product Price Band Sales Summary",
         question: "Compare product sales across price bands using current listed product price as the banding variable.",
         requirements: ["Define price bands explicitly in the CASE expression","Use products.price_idr to assign a product to a band","Calculate units and product-line revenue only from valid orders","State that current listed price may differ from historical unit_price_idr"],
-        expectedOutput: { columns: ["price_band","products_sold","units_sold","product_revenue_idr","order_count"], columnNotes: ["price band","products sold","units sold","product revenue idr","order count"], grain: "One row per defined price band", sortOrder: "See SQL ORDER BY" },
+        expectedOutput: { columns: ["price_band","products_sold","units_sold","product_revenue_idr"], columnNotes: ["price band","products sold","units sold","product revenue idr"], grain: "One row per defined price band", sortOrder: "See SQL ORDER BY" },
         metricDefs: "Bands use current products.price_idr; revenue uses order_items.subtotal_idr and units use quantity on valid orders. This is descriptive, not causal."
       }
     ]
