@@ -27,7 +27,9 @@ DB_PASSWORD = os.environ.get("GAYANARA_DB_PASSWORD", "")
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REF_DIR = os.path.join(SCRIPT_DIR, "reference_results")
 QUERIES_FILE = os.path.join(SCRIPT_DIR, "reference_queries.json")
-MAX_ROWS = 10000
+MAX_ROWS = max(1, min(int(os.environ.get("MAX_ROWS", "5000")), 10000))
+# Must match server.py so generated reference results are never longer than
+# what the app can actually return during validation.
 TIMEOUT_MS = 10_000
 
 

@@ -29,7 +29,7 @@ Keep the service on the Free plan unless you intentionally choose a paid plan. A
 | `DATABASE_URL` | Neon connection string for the dedicated `gayanara_reader` role |
 | `CORS_ALLOWED_ORIGINS` | Exact frontend origin: `https://subhanaristiadi.github.io` |
 | `REQUIRE_NON_SUPERUSER` | Keep `true` for the public deployment |
-| `MAX_ROWS` | Maximum query rows returned; configured as 5000 in Render |
+| `MAX_ROWS` | Maximum query rows returned (default 5000, capped at 10000); the API echoes the active value as `maxRows` so the UI never hardcodes it |
 | `STATEMENT_TIMEOUT_MS` | Query timeout; configured as 10000 ms |
 | `LOCK_TIMEOUT_MS` | Database lock wait limit; configured as 2000 ms |
 

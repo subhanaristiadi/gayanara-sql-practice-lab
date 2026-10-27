@@ -37,6 +37,18 @@ These additions improve coverage but do not claim that all 62 questions are full
 
 The app also has existing exercises that overlap with several questions. Before declaring complete coverage, inspect each existing exercise's metric definition, output grain, and SQL to confirm that it fully answers the corresponding question.
 
+## Settled business definitions
+
+These three thresholds were ambiguous in the original exercise text and are now explicit in both the SQL and the exercise metadata.
+
+| Exercise | Ambiguity | Settled rule |
+|---|---|---|
+| ex-07-s1, ex-07-s2, ex-19-s1 | Which raw category spellings are the same product category | `Accessories`/`Aksesoris` → `Aksesoris`; `Celana`/`Pants` → `Celana`; `Kemeja`/`Shirt` → `Kemeja`; `Dress`, `Jacket`/`Jaket`, `Kaos`, `T-Shirt` collapse by case. Raw values in `products` are never rewritten. |
+| ex-08-s2 | What "high demand" means | At least 20 valid units sold, combined with the existing low-stock rule of 5 units or fewer. |
+| ex-15-s5 | What "elevated return rate" means | Return rate strictly above the current national return rate computed from all orders in the same dataset, with at least 100 orders per location. |
+
+Because the return-rate benchmark is computed from the data rather than hard-coded, ex-15-s5 stays meaningful if the dataset changes.
+
 ## Metric and interpretation safeguards
 
 - Valid sales exclude `cancelled` and `returned` orders.
@@ -54,5 +66,6 @@ The app also has existing exercises that overlap with several questions. Before 
 - [x] Added 15 sub-exercises to `index.html`.
 - [x] Added corresponding reference query IDs to `reference_queries.json`.
 - [x] Updated the README exercise count.
-- [ ] Run all new reference queries against the actual PostgreSQL database.
+- [x] Run all new reference queries against sample data and reconcile output columns with `expectedOutput`.
+- [ ] Run all reference queries against the deployed PostgreSQL database.
 - [ ] Smoke-test the deployed app and automatic validation endpoint after deployment.

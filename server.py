@@ -306,6 +306,7 @@ def execute_readonly_query(sql: str) -> dict[str, Any]:
             "rows": rows,
             "rowCount": len(rows),
             "truncated": truncated,
+            "maxRows": MAX_ROWS,
             "elapsed_ms": elapsed_ms,
         }
     finally:
