@@ -49,7 +49,7 @@ Choose **Submit Query** to check your answer against the exercise reference:
 3. The API runs the reference and user queries under read-only database transactions and returns their results.
 4. The browser compares the result sets and displays **Correct**, **Incorrect**, or an error status, with row/column counts and diagnostics where applicable.
 
-The comparison checks result values as well as row and column counts. Matching output does not prove that the SQL is the only correct solution.
+The comparison checks column count, column names in position, row count, and cell values. A wrong alias such as `revenue` instead of `revenue_idr` therefore fails even when the numbers match, because the exercise documents an exact output contract. Matching output still does not prove that the SQL is the only correct solution.
 
 ## Database
 
@@ -105,6 +105,19 @@ The Render Free service may sleep after inactivity, so its first request after a
 - `.env.example` â€” example environment-variable names; no real credentials
 - `backend_setup.md` â€” backend setup and troubleshooting
 - `docs/NEON_RENDER_DEPLOYMENT.md` â€” extended deployment reference
+- `check_reference_sync.py` — fails when `REF_SQL`, `reference_queries.json`, and the documented output columns drift apart
+- `test_validation_contract.py` — regression tests for the Submit Query comparison rules
+
+## Verify a change
+
+Two checks run without a database:
+
+```bash
+python check_reference_sync.py       # REF_SQL, reference_queries.json, and output contracts agree
+python test_validation_contract.py   # Submit Query comparison rules
+```
+
+Run both before committing a change to any reference query or exercise definition, because the same SQL is stored in two places (`reference_queries.json` for the API and `const REF_SQL` in `index.html` for offline use).
 
 ## Security notes
 
