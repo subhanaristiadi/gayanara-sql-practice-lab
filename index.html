@@ -1881,7 +1881,7 @@ async function submitQuery(subId) {
     const resp = await fetch(getBackendBase() + "/validate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_sql: sql, ref_sql: refSql })
+      body: JSON.stringify({ user_sql: sql, sub_id: subId })
     });
 
     if (!resp.ok) {
