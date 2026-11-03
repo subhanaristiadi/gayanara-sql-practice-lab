@@ -6,7 +6,7 @@ An interactive SQL practice website built around the **Gayanara** dataset, a sim
 
 The Gayanara dataset was sourced from **Ngulik Data**. It represents a simulated Indonesian online fashion store and is used for SQL practice and business analytics.
 
-**Original dataset:** [Gayanara â€” Ngulik Data](https://ngulikdata.com/datasets/gayanara)
+**Original dataset:** [Gayanara Dataset: Ngulik Data](https://ngulikdata.com/datasets/gayanara)
 
 All analysis in this project is based on the dataset provided for this project. Business interpretations and findings are limited to the available data and documented business rules.
 
