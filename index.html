@@ -4,289 +4,42 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gayanara SQL Practice Lab</title>
-<style>
-:root {
-  --sidebar-bg: #1a2332;
-  --sidebar-text: #c8d6e5;
-  --sidebar-active: #2d3f52;
-  --sidebar-hover: #243040;
-  --main-bg: #f5f7fa;
-  --card-bg: #ffffff;
-  --accent: #2d8cf0;
-  --accent-dark: #1a5fb4;
-  --accent-light: #e8f1fd;
-  --teal: #14b8a6;
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
-  --text-muted: #94a3b8;
-  --border: #e2e8f0;
-  --success: #16a34a;
-  --warning: #d97706;
-  --danger: #dc2626;
-  --radius: 8px;
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-mono: "SF Mono", "Fira Code", "JetBrains Mono", Consolas, monospace;
-  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: var(--font-sans); background: var(--main-bg); color: var(--text-primary); line-height: 1.6; }
-a { color: var(--accent); text-decoration: none; }
-a:hover { text-decoration: underline; }
-
-/* Layout */
-.app { display: grid; grid-template-columns: 280px 1fr; min-height: 100vh; }
-.sidebar { background: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; width: 280px; overflow-y: auto; z-index: 100; }
-.sidebar::-webkit-scrollbar { width: 4px; }
-.sidebar::-webkit-scrollbar-thumb { background: #3a4f65; border-radius: 2px; }
-.main { grid-column: 2; padding: 24px; max-width: 1400px; width: 100%; }
-
-/* Sidebar */
-.sidebar-brand { padding: 20px 16px; border-bottom: 1px solid #2a3a4e; }
-.sidebar-brand h1 { font-size: 16px; font-weight: 700; color: #fff; letter-spacing: -0.3px; }
-.sidebar-brand span { font-size: 12px; color: var(--text-muted); display: block; margin-top: 2px; }
-.sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
-.nav-section { margin-bottom: 4px; }
-.nav-section-title { padding: 8px 16px 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
-
-/* Parent exercise in sidebar */
-.nav-parent { display: flex; align-items: center; justify-content: space-between; padding: 7px 16px; font-size: 13px; color: var(--sidebar-text); cursor: pointer; transition: background 0.15s; border: none; background: none; width: 100%; text-align: left; }
-.nav-parent:hover { background: var(--sidebar-hover); }
-.nav-parent.active { background: var(--sidebar-active); color: #fff; }
-.nav-parent .parent-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.nav-parent .parent-progress { font-size: 10px; color: var(--text-muted); margin-left: 6px; min-width: 28px; text-align: right; }
-.nav-parent .parent-progress.full { color: var(--success); }
-.nav-parent .expand-arrow { font-size: 10px; margin-left: 4px; transition: transform 0.15s; }
-.nav-parent.expanded .expand-arrow { transform: rotate(90deg); }
-
-/* Sub-exercise in sidebar */
-.nav-sub { display: block; padding: 5px 16px 5px 32px; font-size: 12px; color: var(--sidebar-text); cursor: pointer; transition: background 0.15s; border: none; background: none; width: 100%; text-align: left; }
-.nav-sub:hover { background: var(--sidebar-hover); }
-.nav-sub.active { background: var(--sidebar-active); color: #fff; }
-.nav-sub .indicator { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; vertical-align: middle; background: #3a4f65; }
-.nav-sub .indicator.completed { background: var(--success); }
-.nav-sub .indicator.saved { background: var(--warning); }
-
-.nav-item { display: block; padding: 7px 16px; font-size: 13px; color: var(--sidebar-text); cursor: pointer; transition: background 0.15s; border: none; background: none; width: 100%; text-align: left; }
-.nav-item:hover { background: var(--sidebar-hover); text-decoration: none; }
-.nav-item.active { background: var(--sidebar-active); color: #fff; }
-.nav-item .indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; vertical-align: middle; background: #3a4f65; }
-.nav-item .indicator.completed { background: var(--success); }
-
-.sidebar-footer { padding: 16px; border-top: 1px solid #2a3a4e; }
-.progress-bar-container { background: #2a3a4e; border-radius: 4px; height: 6px; overflow: hidden; margin-bottom: 8px; }
-.progress-bar { height: 100%; background: var(--teal); border-radius: 4px; transition: width 0.3s; }
-.progress-text { font-size: 11px; color: var(--text-muted); }
-
-/* Main content */
-.page-header { margin-bottom: 24px; }
-.page-header h2 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
-.page-header .subtitle { font-size: 14px; color: var(--text-secondary); }
-
-.dataset-source {
-    margin-top: 8px;
-    font-size: 13px;
-    color: var(--text-secondary);
-}
-.dataset-source a {
-    color: var(--accent);
-    font-weight: 600;
-    text-decoration: none;
-}
-.dataset-source a:hover {
-    text-decoration: underline;
-}
-
-.breadcrumb { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
-.breadcrumb a { cursor: pointer; }
-
-/* Dashboard */
-.dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
-.stat-card { background: var(--card-bg); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
-.stat-card .label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
-.stat-card .value { font-size: 28px; font-weight: 700; }
-.stat-card .sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
-.category-progress { background: var(--card-bg); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); margin-bottom: 16px; }
-.category-progress h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
-.cat-progress-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 13px; }
-.cat-progress-row .cat-name { flex: 1; }
-.cat-progress-row .cat-bar { flex: 2; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
-.cat-progress-row .cat-fill { height: 100%; background: var(--accent); border-radius: 4px; }
-.cat-progress-row .cat-pct { width: 50px; text-align: right; color: var(--text-secondary); font-size: 12px; }
-
-/* Filters */
-.filters-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
-.filters-bar input[type="search"] { flex: 1; min-width: 200px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
-.filters-bar input[type="search"]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-light); }
-.filters-bar select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; background: var(--card-bg); }
-.filters-bar select:focus { outline: none; border-color: var(--accent); }
-
-/* Exercise / Sub-exercise card */
-.exercise-container { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
-.exercise-header { padding: 20px 24px; border-bottom: 1px solid var(--border); }
-.exercise-header .meta { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
-.exercise-header h3 { font-size: 18px; font-weight: 600; }
-.badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
-.badge-beginner { background: #dcfce7; color: #166534; }
-.badge-intermediate { background: #fef3c7; color:#92400e; }
-.badge-advanced { background: #fecaca; color: #991b1b; }
-.badge-category { background: var(--accent-light); color: var(--accent-dark); }
-.badge-status { background: #f1f5f9; color: var(--text-secondary); }
-.badge-status.completed { background: #dcfce7; color: #166534; }
-.badge-status.saved { background: #fef3c7; color: #92400e; }
-
-.exercise-body { padding: 24px; }
-.section-title { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; color: var(--text-secondary); margin-bottom: 10px; }
-.business-context { font-size: 14px; color: var(--text-secondary); margin-bottom: 16px; }
-.question-box { background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
-.question-box .question-text { font-size: 15px; font-weight: 500; margin-bottom: 8px; }
-.requirements-list { list-style: none; padding: 0; }
-.requirements-list li { font-size: 13px; padding: 4px 0 4px 20px; position: relative; }
-.requirements-list li::before { content: "•"; position: absolute; left: 8px; color: var(--accent); font-weight: bold; }
-.metric-defs { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; padding: 12px; background: #f0f9ff; border-radius: 6px; border: 1px solid #bae6fd; }
-.metric-defs strong { color: var(--text-primary); }
-
-/* Expected output table */
-.expected-output { margin-bottom: 20px; }
-.expected-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.expected-table th { background: #f1f5f9; padding: 8px 12px; text-align: left; font-weight: 600; border: 1px solid var(--border); }
-.expected-table td { padding: 8px 12px; border: 1px solid var(--border); color: var(--text-secondary); font-style: italic; }
-.expected-table .placeholder { color: var(--text-muted); font-style: italic; }
-.expected-table-meta { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
-
-/* SQL Editor */
-.sql-editor { margin-bottom: 20px; }
-.sql-editor label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
-.sql-editor textarea { width: 100%; min-height: 220px; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius); font-family: var(--font-mono); font-size: 13px; line-height: 1.5; resize: vertical; background: #fafbfc; }
-.sql-editor textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-light); }
-.sql-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
-
-/* Buttons */
-.btn { padding: 8px 14px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; background: var(--card-bg); color: var(--text-primary); }
-.btn:hover { background: #f1f5f9; }
-.btn:focus { outline: none; box-shadow: 0 0 0 2px var(--accent-light); }
-.btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
-.btn-primary:hover { background: var(--accent-dark); }
-.btn-danger { background: #fff; color: var(--danger); border-color: #fecaca; }
-.btn-danger:hover { background: #fef2f2; }
-.btn-sm { padding: 5px 10px; font-size: 12px; }
-
-
-/* Live query results */
-.query-results-panel{margin-top:20px;border:1px solid var(--border);border-radius:var(--radius);background:var(--card-bg);overflow:hidden}
-.query-results-header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:16px 20px;border-bottom:1px solid var(--border)}
-.query-results-header h4{font-size:15px;margin:0}
-.query-results-meta{color:var(--text-secondary);font-size:12px}
-.query-results-wrap{overflow:auto;max-height:440px}
-.query-results-table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap}
-.query-results-table th{position:sticky;top:0;z-index:1;background:#f1f5f9;text-align:left;font-weight:700}
-.query-results-table th,.query-results-table td{padding:9px 12px;border-bottom:1px solid var(--border)}
-.query-results-table td.null-value{color:#92400e;font-style:italic}
-.query-results-empty{padding:26px 18px;text-align:center;color:var(--text-muted);font-size:13px}
-.query-results-note{padding:9px 16px;border-top:1px solid var(--border);font-size:12px;color:var(--text-secondary);background:#fafbfc}
-.query-status-banner{margin-top:12px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;white-space:pre-wrap}
-.query-status-banner.success{background:#f0fdf4;border-color:#bbf7d0;color:#166534}
-.query-status-banner.error{background:#fef2f2;border-color:#fecaca;color:#991b1b}
-.query-status-banner.info{background:#f8fafc;color:var(--text-secondary)}
-.query-results-spinner{display:inline-block;width:11px;height:11px;margin-right:6px;border:2px solid var(--accent);border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;vertical-align:-1px}
-
-/* Completion control */
-.completion-control { display: flex; align-items: center; gap: 8px; margin-top: 12px; padding: 12px; background: #f8fafc; border-radius: var(--radius); border: 1px solid var(--border); }
-.completion-control input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--success); cursor: pointer; }
-.completion-control label { font-size: 13px; cursor: pointer; }
-.save-status { font-size: 12px; color: var(--text-muted); margin-left: auto; }
-.save-status.saved { color: var(--success); }
-.save-status.unsaved { color: var(--warning); }
-
-/* Validation status banner */
-.validation-banner { margin-top: 14px; padding: 12px 14px; border-radius: var(--radius); font-size: 13px; border: 1px solid var(--border); background: #f8fafc; display: none; }
-.validation-banner.visible { display: block; }
-.validation-banner .vb-head { font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
-.validation-banner .vb-icon { font-size: 15px; }
-.validation-banner .vb-detail { color: var(--text-secondary); white-space: pre-wrap; line-height: 1.5; }
-.validation-banner.correct { background: #f0fdf4; border-color: #bbf7d0; }
-.validation-banner.correct .vb-head { color: #166534; }
-.validation-banner.incorrect { background: #fef2f2; border-color: #fecaca; }
-.validation-banner.incorrect .vb-head { color: #991b1b; }
-.validation-banner.error { background: #fffbeb; border-color: #fde68a; }
-.validation-banner.error .vb-head { color: #92400e; }
-.validation-banner.unavailable { background: #f1f5f9; border-color: var(--border); }
-.validation-banner.unavailable .vb-head { color: var(--text-secondary); }
-.validation-banner.running .vb-spin { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--accent); border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
-.validation-banner.running .vb-head { color: var(--accent-dark); }
-@keyframes spin { to { transform: rotate(360deg); } }
-.btn:disabled { opacity: 0.55; cursor: not-allowed; }
-
-/* Source SQL */
-.source-sql { margin-top: 20px; border: 1px solid var(--border); border-radius: var(--radius); }
-.source-sql-toggle { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; cursor: pointer; background: #f8fafc; border-radius: var(--radius); font-size: 13px; font-weight: 500; }
-.source-sql-toggle:hover { background: #f1f5f9; }
-.source-sql-content { padding: 16px; background: #1e293b; color: #e2e8f0; font-family: var(--font-mono); font-size: 12px; line-height: 1.5; overflow-x: auto; white-space: pre-wrap; display: none; border-radius: 0 0 var(--radius) var(--radius); }
-.source-sql-content.visible { display: block; }
-.source-sql-toggle .arrow { transition: transform 0.2s; }
-.source-sql-toggle.open .arrow { transform: rotate(90deg); }
-.source-sql.schema .source-sql-content { background: #16202e; }
-
-/* Navigation */
-.exercise-nav { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-top: 1px solid var(--border); background: #fafbfc; }
-.exercise-nav .nav-info { font-size: 13px; color: var(--text-secondary); }
-
-/* Parent overview sub-list */
-.sub-list { margin-top: 16px; }
-.sub-list-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; cursor: pointer; transition: background 0.15s; }
-.sub-list-item:hover { background: #f8fafc; }
-.sub-list-item .sub-num { font-size: 11px; font-weight: 700; color: var(--text-muted); min-width: 24px; }
-.sub-list-item .sub-title { flex: 1; font-size: 13px; }
-.sub-list-item .sub-status { font-size: 11px; padding: 2px 8px; border-radius: 10px; }
-.sub-list-item .sub-status.completed { background: #dcfce7; color: #166534; }
-.sub-list-item .sub-status.saved { background: #fef3c7; color: #92400e; }
-.sub-list-item .sub-status.pending { background: #f1f5f9; color: var(--text-muted); }
-
-/* Notes */
-.notes-section { margin-top: 16px; }
-.notes-section textarea { width: 100%; min-height: 60px; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; resize: vertical; }
-.notes-section textarea:focus { outline: none; border-color: var(--accent); }
-
-/* Toolbar */
-.toolbar { display: flex; gap: 8px; margin-bottom: 16px; justify-content: flex-end; flex-wrap: wrap; }
-.toolbar .btn { font-size: 12px; padding: 6px 12px; }
-
-/* Toast */
-.toast { position: fixed; bottom: 20px; right: 20px; padding: 12px 20px; background: var(--text-primary); color: #fff; border-radius: var(--radius); font-size: 13px; z-index: 9999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
-.toast.visible { opacity: 1; }
-.toast.success { background: var(--success); }
-.toast.error { background: var(--danger); }
-
-/* Empty state */
-.empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
-.empty-state h3 { font-size: 16px; margin-bottom: 8px; color: var(--text-secondary); }
-
-/* Responsive */
-@media (max-width: 1024px) {
-  .app { grid-template-columns: 240px 1fr; }
-  .sidebar { width: 240px; }
-  .main { padding: 16px; }
-}
-@media (max-width: 768px) {
-  .app { grid-template-columns: 1fr; }
-  .sidebar { position: relative; width: 100%; height: auto; bottom: 0; }
-  .sidebar-nav { max-height: 300px; }
-  .main { grid-column: 1; }
-}
-</style>
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<header class="topbar">
+  <div class="brand">Gayanara SQL Practice Lab
+    <small>Cloud SQL learning · PostgreSQL on Neon</small>
+    <small class="dataset-source">Dataset Source: <a href="https://ngulikdata.com/datasets/gayanara" target="_blank" rel="noopener noreferrer">Ngulikdata</a></small>
+  </div>
+  <div id="health" class="health" role="status">Checking API and database…</div>
+</header>
 <div class="app">
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-brand">
-      <h1>Gayanara SQL Practice Lab</h1>
-      <span>Personal SQL Learning Tool</span>
+    <strong>Your learning progress</strong>
+    <div class="muted small">Saved in this browser only</div>
+    <div class="stats">
+      <div class="stat"><b id="doneCount">0</b><span>Completed</span></div>
+      <div class="stat"><b id="totalCount">56</b><span>Exercises</span></div>
+      <div class="stat"><b id="percent">0%</b><span>Progress</span></div>
+    </div>
+    <div class="filters">
+      <input type="search" id="filterSearch" placeholder="Search exercises…" oninput="onSearchInput(this.value)" aria-label="Search exercises">
+      <select id="filterCategory" onchange="onFilterChange()" aria-label="Topic"><option value="">All topics</option></select>
+      <select id="filterDifficulty" onchange="onFilterChange()" aria-label="Difficulty">
+        <option value="">All difficulties</option><option>Beginner</option><option>Intermediate</option><option>Advanced</option>
+      </select>
+      <select id="filterStatus" onchange="onFilterChange()" aria-label="Status">
+        <option value="">All status</option><option value="incomplete">Not completed</option><option value="completed">Completed</option><option value="saved">Has saved answer</option><option value="unsaved">No answer yet</option>
+      </select>
     </div>
     <nav class="sidebar-nav" id="sidebarNav" aria-label="Exercise navigation"></nav>
+    <div id="listCount" class="list-count" aria-live="polite"></div>
     <div class="sidebar-footer">
-      <div class="progress-bar-container" aria-label="Overall progress">
-        <div class="progress-bar" id="overallProgress" style="width:0%"></div>
-      </div>
-      <div class="progress-text" id="overallProgressText">0 / 0 sub-exercises completed</div>
+      <div class="progress-bar-container" role="progressbar" aria-label="Overall progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressTrack"><div class="progress-bar" id="overallProgress" style="width:0%"></div></div>
+      <div class="progress-text" id="overallProgressText">0 / 56 sub-exercises completed</div>
+      <div class="footer-actions"><button onclick="exportProgress()">Export progress</button><button onclick="importProgress()">Import progress</button><button class="btn-danger" onclick="resetAllProgress()">Reset progress</button></div>
+      <div class="footer-actions"><button onclick="navigateTo('dashboard')">Learning overview</button></div>
     </div>
   </aside>
   <main class="main" id="mainContent"></main>
@@ -1043,20 +796,14 @@ const SUB_SCHEMA = {
   "ex-20-s3": ["orders"]
 };
 
+function getRequiredTables(subId) {
+  if (SUB_SCHEMA[subId]) return SUB_SCHEMA[subId];
+  const sql = REF_SQL[subId] || "";
+  return Object.keys(TABLE_SCHEMA).filter(table => new RegExp("\\b(?:FROM|JOIN)\\s+" + table + "\\b", "i").test(sql));
+}
+
 function renderSchemaHtml(subId) {
-  const tables = SUB_SCHEMA[subId];
-  if (!tables || tables.length === 0) return "";
-  const parts = [];
-  for (const t of tables) {
-    const cols = TABLE_SCHEMA[t];
-    if (!cols) continue;
-    parts.push("Table: " + t);
-    for (const c of cols) parts.push("  " + c);
-    parts.push("");
-  }
-  // Trim trailing blank line
-  while (parts.length && parts[parts.length - 1] === "") parts.pop();
-  return parts.map(line => "<div>" + (line === "" ? "&nbsp;" : esc(line)) + "</div>").join("");
+  return `<div class="schema-grid">${getRequiredTables(subId).map(table=>`<section class="schema-table"><h3>${esc(table)}</h3><ul>${(TABLE_SCHEMA[table]||[]).map(col=>`<li>${esc(col.replace(/`/g,""))}</li>`).join("")}</ul></section>`).join("")}</div>`;
 }
 
 /* ============================================================
@@ -1166,7 +913,7 @@ let state = {
   notes: {},
   completed: {},
   validation: {},   // { subId: { status, message, at, query } } — separate from answers
-  currentView: "dashboard",
+  currentView: "ex-01-s1",
   expandedParents: {},
   filters: { search: "", difficulty: "", category: "", status: "" }
 };
@@ -1313,6 +1060,7 @@ function getFilteredSubs() {
   if (search) {
     const q = search.toLowerCase();
     list = list.filter(({sub, parent}) =>
+      sub.id.toLowerCase().includes(q) ||
       sub.title.toLowerCase().includes(q) ||
       sub.question.toLowerCase().includes(q) ||
       parent.title.toLowerCase().includes(q) ||
@@ -1323,7 +1071,8 @@ function getFilteredSubs() {
   }
   if (difficulty) list = list.filter(({parent}) => parent.difficulty === difficulty);
   if (category) list = list.filter(({parent}) => parent.category === category);
-  if (status === "completed") list = list.filter(({sub}) => state.completed[sub.id]);
+  if (status === "incomplete") list = list.filter(({sub}) => !state.completed[sub.id]);
+  else if (status === "completed") list = list.filter(({sub}) => state.completed[sub.id]);
   else if (status === "saved") list = list.filter(({sub}) => state.answers[sub.id] && state.answers[sub.id].trim() && !state.completed[sub.id]);
   else if (status === "unsaved") list = list.filter(({sub}) => !state.answers[sub.id] && !state.completed[sub.id]);
   return list;
@@ -1333,139 +1082,35 @@ function getFilteredSubs() {
    RENDER: SIDEBAR
    ============================================================ */
 function renderSidebar() {
-  const nav = document.getElementById("sidebarNav");
-  let html = `<button class="nav-item${state.currentView==='dashboard'?' active':''}" onclick="navigateTo('dashboard')">
-    <span class="indicator"></span>Dashboard
-  </button>`;
-
-  for (const cat of CATEGORIES) {
-    const catParents = PARENTS.filter(p => p.category === cat);
-    if (catParents.length === 0) continue;
-    html += `<div class="nav-section"><div class="nav-section-title">${esc(cat)}</div>`;
-    for (const p of catParents) {
-      const pp = getParentProgress(p);
-      const isCurrent = state.currentView === p.id || (SUB_MAP[state.currentView] && SUB_MAP[state.currentView].parent.id === p.id);
-      const expanded = state.expandedParents[p.id] || isCurrent;
-      const activeClass = isCurrent ? " active" : "";
-      const expandedClass = expanded ? " expanded" : "";
-      const progressClass = pp.done === pp.total && pp.total > 0 ? " full" : "";
-      html += `<button class="nav-parent${activeClass}${expandedClass}" onclick="toggleParent('${p.id}')">
-        <span class="parent-title">${esc(p.title)}</span>
-        <span class="parent-progress${progressClass}">${pp.done}/${pp.total}</span>
-        <span class="expand-arrow">&#9654;</span>
-      </button>`;
-      if (expanded) {
-        for (const s of p.subs) {
-          const subActive = state.currentView === s.id ? " active" : "";
-          let indClass = "";
-          if (state.completed[s.id]) indClass = "completed";
-          else if (state.answers[s.id] && state.answers[s.id].trim()) indClass = "saved";
-          html += `<button class="nav-sub${subActive}" onclick="event.stopPropagation();navigateTo('${s.id}')">
-            <span class="indicator ${indClass}"></span>${esc(s.title)}
-          </button>`;
-        }
-      }
-    }
-    html += `</div>`;
-  }
-  nav.innerHTML = html;
-
   const pr = getProgress();
+  document.getElementById("doneCount").textContent = pr.completed;
+  document.getElementById("totalCount").textContent = pr.total;
+  document.getElementById("percent").textContent = pr.pct + "%";
   document.getElementById("overallProgress").style.width = pr.pct + "%";
+  document.getElementById("progressTrack").setAttribute("aria-valuenow", pr.pct);
   document.getElementById("overallProgressText").textContent = `${pr.completed} / ${pr.total} sub-exercises completed`;
+  renderExerciseList();
 }
 
 /* ============================================================
    RENDER: DASHBOARD
    ============================================================ */
 function renderDashboard() {
-  const main = document.getElementById("mainContent");
   const pr = getProgress();
-  let html = `
-    <div class="page-header">
-      <h2>Dashboard</h2>
-      <div class="subtitle">Your Gayanara SQL practice workspace. ${pr.total} sub-exercises across ${PARENTS.length} parent topics.</div>
-      <div class="dataset-source">
-        Dataset Source:
-        <a href="https://ngulikdata.com/datasets/gayanara"
-           target="_blank"
-           rel="noopener noreferrer">Ngulikdata</a>
-      </div>
-    </div>
-    <div class="toolbar">
-      <button class="btn" onclick="exportProgress()">Export Progress (JSON)</button>
-      <button class="btn" onclick="importProgress()">Import Progress (JSON)</button>
-      <button class="btn btn-danger" onclick="resetAllProgress()">Reset All</button>
-    </div>
+  document.getElementById("mainContent").innerHTML = `
+    <div class="hero"><div><div class="eyebrow">SQL learning path</div><h1>Your learning overview</h1><div class="muted">${pr.total} Gayanara sub-exercises across ${PARENTS.length} topics.</div></div><button onclick="navigateTo('${ALL_SUBS.find(({sub})=>!state.completed[sub.id])?.sub.id || ALL_SUBS[0].sub.id}')">Continue learning</button></div>
     <div class="dashboard-grid">
-      <div class="stat-card"><div class="label">Overall Progress</div><div class="value">${pr.pct}%</div><div class="sub">${pr.completed} of ${pr.total} sub-exercises completed</div></div>
-      <div class="stat-card"><div class="label">Answers Saved</div><div class="value">${pr.saved}</div><div class="sub">Sub-exercises with saved SQL</div></div>
-      <div class="stat-card"><div class="label">Remaining</div><div class="value">${pr.total - pr.completed}</div><div class="sub">Sub-exercises not yet completed</div></div>
+      <div class="stat-card"><div class="label">Overall progress</div><div class="value">${pr.pct}%</div><div class="sub">${pr.completed} of ${pr.total} completed</div></div>
+      <div class="stat-card"><div class="label">Answers saved</div><div class="value">${pr.saved}</div><div class="sub">Sub-exercises with saved SQL</div></div>
+      <div class="stat-card"><div class="label">Remaining</div><div class="value">${pr.total-pr.completed}</div><div class="sub">Sub-exercises to complete</div></div>
     </div>
-    <div class="category-progress"><h3>Progress by Category</h3>`;
-
-  for (const cat of CATEGORIES) {
-    const catSubs = ALL_SUBS.filter(s => s.parent.category === cat);
-    if (catSubs.length === 0) continue;
-    const done = catSubs.filter(s => state.completed[s.sub.id]).length;
-    const pct = catSubs.length > 0 ? Math.round(done / catSubs.length * 100) : 0;
-    html += `<div class="cat-progress-row"><span class="cat-name">${esc(cat)}</span><div class="cat-bar"><div class="cat-fill" style="width:${pct}%"></div></div><span class="cat-pct">${done}/${catSubs.length}</span></div>`;
-  }
-
-  html += `</div>
-    <div class="filters-bar">
-      <input type="search" id="filterSearch" placeholder="Search sub-exercises by title, question, file, or concept..." value="${esc(state.filters.search)}" oninput="onSearchInput(this.value)" aria-label="Search">
-      <select id="filterDifficulty" onchange="onFilterChange()" aria-label="Difficulty">
-        <option value="">All difficulties</option>
-        <option value="Beginner"${state.filters.difficulty==='Beginner'?' selected':''}>Beginner</option>
-        <option value="Intermediate"${state.filters.difficulty==='Intermediate'?' selected':''}>Intermediate</option>
-        <option value="Advanced"${state.filters.difficulty==='Advanced'?' selected':''}>Advanced</option>
-      </select>
-      <select id="filterCategory" onchange="onFilterChange()" aria-label="Category">
-        <option value="">All categories</option>
-        ${CATEGORIES.map(c=>`<option value="${esc(c)}"${state.filters.category===c?' selected':''}>${esc(c)}</option>`).join("")}
-      </select>
-      <select id="filterStatus" onchange="onFilterChange()" aria-label="Status">
-        <option value="">All statuses</option>
-        <option value="completed"${state.filters.status==='completed'?' selected':''}>Completed</option>
-        <option value="saved"${state.filters.status==='saved'?' selected':''}>Has saved answer</option>
-        <option value="unsaved"${state.filters.status==='unsaved'?' selected':''}>No answer yet</option>
-      </select>
-    </div>
-    <div id="exerciseList">`;
-
-  const filtered = getFilteredSubs();
-  if (filtered.length === 0) {
-    html += `<div class="empty-state"><h3>No sub-exercises match your filters</h3><p>Try adjusting the search or filter criteria.</p></div>`;
-  } else {
-    // Group by parent for display
-    const grouped = {};
-    for (const {sub, parent} of filtered) {
-      if (!grouped[parent.id]) grouped[parent.id] = { parent, subs: [] };
-      grouped[parent.id].subs.push(sub);
-    }
-    for (const pid in grouped) {
-      const {parent, subs} = grouped[pid];
-      const pp = getParentProgress(parent);
-      html += `<div style="margin-bottom:12px;">
-        <div style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;padding:4px 0;">
-          <span class="badge badge-${parent.difficulty.toLowerCase()}">${parent.difficulty}</span>
-          ${esc(parent.title)} <span style="font-size:11px;color:var(--text-muted);">(${pp.done}/${pp.total} complete)</span>
-        </div>`;
-      for (const s of subs) {
-        const status = state.completed[s.id] ? "completed" : (state.answers[s.id]&&state.answers[s.id].trim()?"saved":"pending");
-        const statusLabel = state.completed[s.id]?"Completed":(state.answers[s.id]&&state.answers[s.id].trim()?"Answer saved":"Not started");
-        html += `<div class="sub-list-item" onclick="navigateTo('${s.id}')">
-          <span class="sub-num">${s.id.split('-s')[1]}</span>
-          <span class="sub-title">${esc(s.title)}</span>
-          <span class="sub-status ${status}">${statusLabel}</span>
-        </div>`;
-      }
-      html += `</div>`;
-    }
-  }
-  html += `</div>`;
-  main.innerHTML = html;
+    <section class="category-progress"><h3>Progress by category</h3>${CATEGORIES.map(cat=>{
+      const subs = ALL_SUBS.filter(x=>x.parent.category===cat);
+      const done = subs.filter(x=>state.completed[x.sub.id]).length;
+      return `<div class="cat-progress-row"><span class="cat-name">${esc(cat)}</span><div class="cat-bar"><div class="cat-fill" style="width:${subs.length?done/subs.length*100:0}%"></div></div><span class="cat-pct">${done}/${subs.length}</span></div>`;
+    }).join("")}</section>
+    <section class="panel"><h2>All exercises</h2><div id="exerciseList"></div></section>`;
+  renderExerciseList();
 }
 
 /* ============================================================
@@ -1531,126 +1176,47 @@ function renderParent(parentId) {
 function renderSub(subId) {
   const entry = SUB_MAP[subId];
   if (!entry) { renderDashboard(); return; }
-  const { sub, parent: p } = entry;
-  const main = document.getElementById("mainContent");
-  const pIdx = PARENTS.indexOf(p);
-  const sIdx = p.subs.indexOf(sub);
-
-  let statusBadge = "";
-  if (state.completed[sub.id]) statusBadge = '<span class="badge badge-status completed">Completed</span>';
-  else if (state.answers[sub.id]&&state.answers[sub.id].trim()) statusBadge = '<span class="badge badge-status saved">Answer Saved</span>';
-  else statusBadge = '<span class="badge badge-status">Not Started</span>';
-
-  let html = `
-    <div class="breadcrumb"><a onclick="navigateTo('dashboard')">&larr; Dashboard</a> &rsaquo; <a onclick="navigateTo('${p.id}')">${esc(p.title)}</a> &rsaquo; Sub ${sIdx+1}</div>
-    <div class="page-header">
-      <h2>${esc(sub.title)}</h2>
-      <div class="subtitle">Parent ${pIdx+1} of ${PARENTS.length}, Sub-exercise ${sIdx+1} of ${p.subs.length} &mdash; ${esc(p.category)}</div>
+  const {sub, parent: p} = entry;
+  const index = ALL_SUBS.findIndex(x=>x.sub.id===subId);
+  const status = state.completed[subId] ? "Completed" : state.answers[subId]?.trim() ? "Answer saved" : "Not started";
+  const tables = getRequiredTables(subId);
+  document.getElementById("mainContent").innerHTML = `
+    <div class="hero">
+      <div><div class="eyebrow">${esc(p.category)}</div><h1>${esc(sub.title)}</h1>
+        <span class="badge">${esc(subId)}</span><span class="badge">${esc(p.difficulty)}</span><span class="badge badge-status ${state.completed[subId]?'completed':''}">${status}</span>
+      </div>
+      <div class="footer-actions"><button ${index===0?'disabled':''} onclick="navigateTo('${ALL_SUBS[index-1]?.sub.id || subId}')">Previous</button><button ${index===ALL_SUBS.length-1?'disabled':''} onclick="navigateTo('${ALL_SUBS[index+1]?.sub.id || subId}')">Next</button></div>
     </div>
-    <div class="exercise-container">
-      <div class="exercise-header">
-        <div class="meta">
-          <span class="badge badge-${p.difficulty.toLowerCase()}">${p.difficulty}</span>
-          <span class="badge badge-category">${esc(p.category)}</span>
-          ${statusBadge}
-          <span style="font-size:12px;color:var(--text-muted);margin-left:auto;">${p.sourceFile}</span>
-        </div>
-        <h3>Sub-exercise ${sIdx+1}: ${esc(sub.title)}</h3>
-      </div>
-      <div class="exercise-body">
-        <div class="section-title">Task</div>
-        <div class="question-box">
-          <div class="question-text">${esc(sub.question)}</div>
-          <ul class="requirements-list">
-            ${sub.requirements.map(r=>`<li>${esc(r)}</li>`).join("")}
-          </ul>
-        </div>
-
-        <div class="metric-defs"><strong>Metric Definitions &amp; Rules:</strong> ${esc(sub.metricDefs)}</div>
-
-        <div class="source-sql schema">
-          <div class="source-sql-toggle" onclick="toggleSourceSql(this)" role="button" tabindex="0" onkeydown="if(event.key==='Enter')this.click()" aria-expanded="false">
-            <span>View Data Schema</span>
-            <span class="arrow">&#9654;</span>
-          </div>
-          <div class="source-sql-content">${renderSchemaHtml(sub.id)}</div>
-        </div>
-
-        <div class="expected-output">
-          <div class="section-title">Expected Output</div>
-          <table class="expected-table">
-            <thead><tr>${sub.expectedOutput.columns.map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead>
-            <tbody><tr>${sub.expectedOutput.columns.map((c,i)=>`<td class="placeholder">${esc(sub.expectedOutput.columnNotes[i]||"Your query result")}</td>`).join("")}</tr></tbody>
-          </table>
-          <div class="expected-table-meta">Grain: ${esc(sub.expectedOutput.grain)} | Sort: ${esc(sub.expectedOutput.sortOrder)} | <em>Schema-only specification. Run your query below to view actual database results.</em></div>
-        </div>
-
-        <div class="sql-editor">
-          <label for="sqlEditor">Your SQL Answer</label>
-          <textarea id="sqlEditor" placeholder="-- Write your PostgreSQL query here" spellcheck="false">${esc(state.answers[sub.id]||"")}</textarea>
-          <div class="sql-actions">
-            <button class="btn btn-primary" id="runQueryBtn" onclick="runUserQuery('${sub.id}')">Run Query</button>
-            <button class="btn btn-primary" id="submitBtn" onclick="submitQuery('${sub.id}')">Validate Answer</button>
-            <button class="btn btn-primary" onclick="copyAnswer('${sub.id}')">Copy SQL</button>
-            <button class="btn" onclick="saveAnswer('${sub.id}')">Save Answer</button>
-            <button class="btn btn-danger" onclick="resetAnswer('${sub.id}')">Reset</button>
-          </div>
-          <div class="validation-banner" id="validationBanner" role="status" aria-live="polite"></div>
-        </div>
-
-        <section class="query-results-panel" aria-live="polite">
-          <div class="query-results-header">
-            <h4>Query Results</h4>
-            <span class="query-results-meta" id="queryResultsMeta">No query executed yet</span>
-          </div>
-          <div class="query-results-wrap" id="queryResults">
-            <div class="query-results-empty">Run your SELECT query to see the rows returned by the Gayanara PostgreSQL database.</div>
-          </div>
-          <div class="query-results-note">Results are generated live from the database. Large result sets may be truncated for safety and performance.</div>
-        </section>
-        <div class="query-status-banner info" id="queryStatus" role="status" aria-live="polite">Ready to run a query.</div>
-
-          <div class="completion-control">
-            <input type="checkbox" id="completeChk" ${state.completed[sub.id]?"checked":""} onchange="toggleComplete('${sub.id}',this.checked)" aria-label="Mark complete">
-            <label for="completeChk">Mark as completed</label>
-            <span class="save-status ${state.answers[sub.id]&&state.answers[sub.id].trim()?'saved':'unsaved'}" id="saveStatus">${state.answers[sub.id]&&state.answers[sub.id].trim()?"Answer saved":"No answer saved"}</span>
-          </div>
-        </div>
-
-        <div class="notes-section">
-          <label for="notesEditor" style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">Personal Notes</label>
-          <textarea id="notesEditor" placeholder="Your notes about this sub-exercise...">${esc(state.notes[sub.id]||"")}</textarea>
-          <button class="btn btn-sm" style="margin-top:6px;" onclick="saveNotes('${sub.id}')">Save Notes</button>
-        </div>
-
-        <div class="source-sql">
-          <div class="source-sql-toggle" onclick="toggleSourceSql(this)" role="button" tabindex="0" onkeydown="if(event.key==='Enter')this.click()" aria-expanded="false">
-            <span>View Source SQL Reference (${esc(p.sourceFile)})</span>
-            <span class="arrow">&#9654;</span>
-          </div>
-          <div class="source-sql-content">${esc(p.sourceSQL)}</div>
-        </div>
-      </div>
-
-      <div class="exercise-nav">
-        <button class="btn" onclick="navigateTo('${p.id}')">&larr; ${esc(p.title)}</button>
-        <div style="display:flex;gap:8px;align-items:center;">
-          ${sIdx>0?`<button class="btn" onclick="navigateTo('${p.subs[sIdx-1].id}')">&larr; Prev</button>`:""}
-          <span class="nav-info">Sub ${sIdx+1} / ${p.subs.length}</span>
-          ${sIdx<p.subs.length-1?`<button class="btn" onclick="navigateTo('${p.subs[sIdx+1].id}')">Next &rarr;</button>`:""}
-        </div>
-      </div>
-    </div>`;
-  main.innerHTML = html;
-
-  const editor = document.getElementById("sqlEditor");
-  if (editor) {
-    editor.addEventListener("keydown", function(e) {
-      if ((e.ctrlKey||e.metaKey) && e.key==="Enter") { e.preventDefault(); runUserQuery(sub.id); }
-    });
-  }
-  // Restore last validation banner state for this sub-exercise
-  restoreValidationBanner(sub.id);
+    <section class="panel">
+      <h2>Business question</h2><p class="question-text">${esc(sub.question)}</p>
+      <div class="meta-grid"><div><strong>Required tables</strong><p>${tables.map(esc).join(", ")}</p></div><div><strong>Analytical grain</strong><p>${esc(sub.expectedOutput.grain)}</p></div><div><strong>Expected output</strong><p>${sub.expectedOutput.columns.map(esc).join(", ")}</p></div></div>
+      <details class="context-details"><summary>Business context and requirements</summary><p class="business-context">${esc(p.businessContext)}</p><ul class="requirements-list">${sub.requirements.map(r=>`<li>${esc(r)}</li>`).join("")}</ul><div class="muted small">Learning concepts: ${p.concepts.map(esc).join(", ")}</div><button class="btn" onclick="navigateTo('${p.id}')">View topic overview</button></details>
+      <div class="metric-defs"><strong>Metric definitions &amp; rules:</strong> ${esc(sub.metricDefs)}</div>
+      <div class="source-sql schema"><button class="source-sql-toggle" onclick="toggleSourceSql(this)" aria-expanded="false"><span>View Data Schema</span></button><div class="source-sql-content">${renderSchemaHtml(subId)}</div></div>
+      <details class="expected-output"><summary>Expected output specification</summary><div class="table-wrap"><table class="expected-table"><thead><tr>${sub.expectedOutput.columns.map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead><tbody><tr>${sub.expectedOutput.columns.map((c,i)=>`<td>${esc(sub.expectedOutput.columnNotes[i]||"Your query result")}</td>`).join("")}</tr></tbody></table></div><div class="expected-table-meta">Grain: ${esc(sub.expectedOutput.grain)} | Sort: ${esc(sub.expectedOutput.sortOrder)}<br>Schema-only specification. Run your query below to view actual database results.</div></details>
+    </section>
+    <section class="panel sql-editor">
+      <div class="editor-head"><h2><label for="sqlEditor">SQL editor</label></h2><span class="small">Ctrl/⌘ + Enter to run</span></div>
+      <textarea id="sqlEditor" placeholder="Write a PostgreSQL SELECT query…" spellcheck="false">${esc(state.answers[subId]||"")}</textarea>
+      <div class="sql-actions"><button class="btn-primary" id="runQueryBtn" onclick="runUserQuery('${subId}')">Run Query</button><button id="submitBtn" onclick="submitQuery('${subId}')">Validate Answer</button><button onclick="saveAnswer('${subId}')">Save Answer</button><button onclick="copyAnswer('${subId}')">Copy SQL</button><button onclick="resetAnswer('${subId}')">Reset editor</button><button onclick="document.getElementById('referenceToggle').click()">Reveal reference SQL</button></div>
+      <div class="source-sql"><button id="referenceToggle" class="source-sql-toggle" onclick="toggleSourceSql(this)" aria-expanded="false">View Source SQL Reference (${esc(p.sourceFile)})</button><div class="source-sql-content">${esc(REF_SQL[subId] || p.sourceSQL)}<details><summary>Full topic source SQL</summary><pre>${esc(p.sourceSQL)}</pre></details></div></div>
+    </section>
+    <section class="panel query-results-panel" aria-live="polite">
+      <div class="query-results-header"><h2>Query results</h2><span class="query-results-meta" id="queryResultsMeta">No query executed yet</span></div>
+      <div class="query-results-wrap" id="queryResults"><div class="query-results-empty">Run a query to see actual rows returned by your Gayanara PostgreSQL database on Neon.</div></div>
+      <div class="query-results-note">Results are generated live from the database. Large result sets may be truncated for safety and performance.</div>
+      <div class="query-status-banner info" id="queryStatus" role="status">Ready to run a query.</div>
+    </section>
+    <section class="panel"><h2>Answer validation</h2><p class="muted small">Validation executes your SQL and the trusted server-side reference query independently. Equivalent SQL can pass when its output satisfies the exercise requirements.</p>
+      <div class="validation-banner visible" id="validationBanner" role="status" aria-live="polite">Not validated yet.</div>
+      <div class="completion-control"><input type="checkbox" id="completeChk" ${state.completed[subId]?'checked':''} onchange="toggleComplete('${subId}',this.checked)"><label for="completeChk">Mark as completed</label><span class="save-status ${state.answers[subId]?.trim()?'saved':'unsaved'}" id="saveStatus">${state.answers[subId]?.trim()?'Answer saved':'No answer saved'}</span></div>
+    </section>
+    <section class="panel notes-section"><h2><label for="notesEditor">Personal notes</label></h2><textarea id="notesEditor" placeholder="Record what you learned, mistakes, and business insights…">${esc(state.notes[subId]||"")}</textarea><div class="sql-actions"><button onclick="saveNotes('${subId}')">Save notes</button></div></section>
+    <div class="exercise-nav"><button onclick="navigateTo('${p.id}')">${esc(p.title)}</button><span class="nav-info">Exercise ${index+1} of ${ALL_SUBS.length}</span></div>`;
+  document.getElementById("sqlEditor").addEventListener("keydown", e=>{
+    if ((e.ctrlKey||e.metaKey) && e.key==="Enter") { e.preventDefault(); runUserQuery(subId); }
+  });
+  restoreValidationBanner(subId);
 }
 
 /* ============================================================
@@ -1681,7 +1247,7 @@ function copyAnswer(subId) {
   const text = state.answers[subId] || "";
   if (!text.trim()) { showToast("No SQL to copy. Write your answer first.", "error"); return; }
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(()=>showToast("SQL copied. Paste into pgAdmin 4 to execute.","success")).catch(()=>fallbackCopy(text));
+    navigator.clipboard.writeText(text).then(()=>showToast("SQL copied.","success")).catch(()=>fallbackCopy(text));
   } else fallbackCopy(text);
 }
 
@@ -1689,7 +1255,7 @@ function fallbackCopy(text) {
   const ta = document.createElement("textarea");
   ta.value = text; ta.style.position="fixed"; ta.style.left="-9999px";
   document.body.appendChild(ta); ta.select();
-  try { document.execCommand("copy"); showToast("SQL copied. Paste into pgAdmin 4 to execute.","success"); }
+  try { document.execCommand("copy"); showToast("SQL copied.","success"); }
   catch(e) { showToast("Copy failed. Select and copy manually.","error"); }
   document.body.removeChild(ta);
 }
@@ -1960,7 +1526,7 @@ async function submitQuery(subId) {
   } finally {
     submittingSubId = null;
     btn.disabled = false;
-    btn.textContent = "Submit Query";
+    btn.textContent = "Validate Answer";
   }
 }
 
@@ -2160,6 +1726,13 @@ function onFilterChange() {
 }
 
 function renderExerciseList() {
+  const filtered = getFilteredSubs();
+  document.getElementById("sidebarNav").innerHTML = filtered.length ? filtered.map(({sub,parent})=>`<button class="exercise${state.currentView===sub.id?' active':''}" ${state.currentView===sub.id?'aria-current="page"':''} onclick="navigateTo('${sub.id}')"><strong>${esc(sub.title)}${state.completed[sub.id]?'<span class="done" aria-label="Completed">✓</span>':''}</strong><small>${esc(sub.id)} · ${esc(parent.difficulty)}${state.answers[sub.id]?.trim()?' · Saved':''}</small></button>`).join("") : '<div class="empty-state">No exercises match your filters. Try a different search or topic.</div>';
+  document.getElementById("listCount").textContent = `${filtered.length} of ${totalSubs} exercises`;
+  renderDashboardList();
+}
+
+function renderDashboardList() {
   const container = document.getElementById("exerciseList");
   if (!container) return;
   const filtered = getFilteredSubs();
@@ -2244,10 +1817,25 @@ function resetAllProgress() {
 /* ============================================================
    INIT
    ============================================================ */
+async function checkBackendHealth() {
+  const health = document.getElementById("health");
+  try {
+    const response = await fetch(getBackendBase() + "/health", {signal: AbortSignal.timeout(60000)});
+    const data = await response.json();
+    if (!response.ok || data.status !== "ok") throw new Error("Unavailable");
+    health.textContent = "● PostgreSQL connected";
+    health.className = "health connected";
+  } catch {
+    health.textContent = "API unavailable · retry by running a query";
+    health.className = "health unavailable";
+  }
+}
+
 function init() {
   loadState();
-  renderSidebar();
-  renderDashboard();
+  document.getElementById("filterCategory").insertAdjacentHTML("beforeend", CATEGORIES.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join(""));
+  navigateTo(state.currentView);
+  checkBackendHealth();
 }
 document.addEventListener("DOMContentLoaded", init);
 </script>
