@@ -12,7 +12,10 @@
     <small>Cloud SQL learning · PostgreSQL on Neon</small>
     <small class="dataset-source">Dataset Source: <a href="https://ngulikdata.com/datasets/gayanara" target="_blank" rel="noopener noreferrer">Ngulikdata</a></small>
   </div>
-  <div id="health" class="health" role="status">Checking API and database…</div>
+  <div class="connection-status">
+    <span id="health" class="health" role="status">Checking API and database…</span>
+    <button id="retryConnectionBtn" class="connection-retry" type="button" onclick="checkBackendHealth()" hidden>Retry connection</button>
+  </div>
 </header>
 <div class="app">
   <aside class="sidebar" id="sidebar">
@@ -1359,6 +1362,7 @@ async function runUserQuery(subId) {
       const detail = data.detail ? "\n" + data.detail : "";
       throw new Error((data.error || "Query failed (HTTP " + response.status + ").") + detail);
     }
+    markBackendConnected();
     renderQueryResults(data);
     status.className = "query-status-banner success";
     status.textContent = data.truncated
@@ -1483,6 +1487,7 @@ async function submitQuery(subId) {
     }
 
     const data = await resp.json();
+    markBackendConnected();
     const result = compareResults(data.user, data.reference, subId);
     // Check required-technique requirements (best-effort regex hint)
     if (result.status === "correct") {
@@ -1817,17 +1822,35 @@ function resetAllProgress() {
 /* ============================================================
    INIT
    ============================================================ */
-async function checkBackendHealth() {
+let backendHealthVersion = 0;
+
+function markBackendConnected() {
+  // A successful database query supersedes any older health-check request.
+  backendHealthVersion++;
   const health = document.getElementById("health");
+  health.textContent = "● PostgreSQL connected";
+  health.className = "health connected";
+  document.getElementById("retryConnectionBtn").hidden = true;
+}
+
+async function checkBackendHealth() {
+  const version = ++backendHealthVersion;
+  const health = document.getElementById("health");
+  const retry = document.getElementById("retryConnectionBtn");
+  health.textContent = "Connecting to API and database…";
+  health.className = "health";
+  retry.hidden = true;
   try {
     const response = await fetch(getBackendBase() + "/health", {signal: AbortSignal.timeout(60000)});
     const data = await response.json();
     if (!response.ok || data.status !== "ok") throw new Error("Unavailable");
-    health.textContent = "● PostgreSQL connected";
-    health.className = "health connected";
+    if (version !== backendHealthVersion) return;
+    markBackendConnected();
   } catch {
-    health.textContent = "API unavailable · retry by running a query";
+    if (version !== backendHealthVersion) return;
+    health.textContent = "Connection not confirmed · please retry";
     health.className = "health unavailable";
+    retry.hidden = false;
   }
 }
 
